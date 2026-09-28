@@ -73,18 +73,21 @@ export default function SettingsPage() {
     setTgLoading(true);
     setTgMsg({ type: '', text: '' });
     
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    try {
+      const res = await fetch('/api/user/link-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramId: telegramId.trim() })
+      });
+      const data = await res.json();
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ telegram_id: telegramId || null })
-      .eq('id', session.user.id);
-
-    if (error) {
-      setTgMsg({ type: 'error', text: 'Failed to link account. ' + error.message });
-    } else {
-      setTgMsg({ type: 'success', text: 'Telegram account linked successfully!' });
+      if (data.success) {
+        setTgMsg({ type: 'success', text: 'Telegram account linked successfully!' });
+      } else {
+        setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
+      }
+    } catch (err: any) {
+      setTgMsg({ type: 'error', text: 'Server error occurred' });
     }
     setTgLoading(false);
   };
