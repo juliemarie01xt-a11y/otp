@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LucideLock, LucideCreditCard, LucideTrendingUp, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideWallet, LucideKey } from 'lucide-react';
+import { LucideLock, LucideCreditCard, LucideTrendingUp, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideWallet, LucideKey, LucideSmartphone } from 'lucide-react';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +13,10 @@ export default function SettingsPage() {
   const [password, setPassword] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdMsg, setPwdMsg] = useState({ type: '', text: '' });
+
+  const [telegramId, setTelegramId] = useState('');
+  const [tgLoading, setTgLoading] = useState(false);
+  const [tgMsg, setTgMsg] = useState({ type: '', text: '' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +30,7 @@ export default function SettingsPage() {
         .eq('id', session.user.id)
         .single();
       setProfile(prof);
+      if (prof?.telegram_id) setTelegramId(prof.telegram_id);
 
       // 2. Get Deposits
       const { data: deps } = await supabase
@@ -62,6 +67,27 @@ export default function SettingsPage() {
 
     fetchData();
   }, []);
+
+  const handleLinkTelegram = async (e: any) => {
+    e.preventDefault();
+    setTgLoading(true);
+    setTgMsg({ type: '', text: '' });
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ telegram_id: telegramId || null })
+      .eq('id', session.user.id);
+
+    if (error) {
+      setTgMsg({ type: 'error', text: 'Failed to link account. ' + error.message });
+    } else {
+      setTgMsg({ type: 'success', text: 'Telegram account linked successfully!' });
+    }
+    setTgLoading(false);
+  };
 
   const handleUpdatePassword = async (e: any) => {
     e.preventDefault();
@@ -209,6 +235,45 @@ export default function SettingsPage() {
             </div>
           </div>
           
+          {/* Link Telegram Box */}
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
+              <LucideSmartphone className="w-5 h-5 text-blue-500" />
+              <h2 className="font-bold text-zinc-900">Link Telegram Bot</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-xs text-zinc-500 mb-4">Message <b>@YourBotName</b> on Telegram with <code>/start</code> to get your ID.</p>
+              <form onSubmit={handleLinkTelegram} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-zinc-700 mb-1.5">Telegram ID</label>
+                  <input
+                    type="text"
+                    value={telegramId}
+                    onChange={(e) => setTelegramId(e.target.value)}
+                    placeholder="e.g., 8252822439"
+                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  />
+                </div>
+                
+                {tgMsg.text && (
+                  <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${tgMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                    {tgMsg.type === 'error' ? <LucideXCircle className="w-4 h-4 shrink-0" /> : <LucideCheckCircle2 className="w-4 h-4 shrink-0" />}
+                    {tgMsg.text}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={tgLoading}
+                  className="w-full bg-zinc-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideSmartphone className="w-4 h-4" />}
+                  {tgLoading ? 'Linking...' : 'Link Account'}
+                </button>
+              </form>
+            </div>
+          </div>
+
           <div className="bg-zinc-50 rounded-xl p-5 border border-zinc-200">
             <h3 className="font-bold text-zinc-900 text-sm mb-1">Account Info</h3>
             <p className="text-zinc-500 text-xs mb-3">Your profile information.</p>
