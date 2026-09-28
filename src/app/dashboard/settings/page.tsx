@@ -74,6 +74,8 @@ export default function SettingsPage() {
     setTgMsg({ type: '', text: '' });
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not logged in");
       const res = await fetch(`/api/user/link-telegram?t=${Date.now()}`, {
         method: 'POST',
         headers: { 
