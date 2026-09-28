@@ -399,7 +399,7 @@ export default function Home() {
     };
 
     try {
-      const payload: any = { country, service, tier, maxPrice: price };
+      const payload: any = { country, service, tier, maxPrice: price, rule_id };
       const res = await apiPost('/api/vsim/allocate', payload);
       if (res.data.success) {
         setActivations((prev: any[]) => [res.data, ...prev]);
@@ -478,7 +478,7 @@ export default function Home() {
               )}
             {step === 1 && (
               <div className="grid grid-cols-2 gap-3">
-                {POPULAR_SERVICES.filter(s => availableRoutes.some(r => r.internal_service === s.code)).map(s => (
+                {POPULAR_SERVICES.filter(s => s.code !== 'gmail' && availableRoutes.some(r => r.internal_service === s.code)).map(s => (
                   <button
                     key={s.code}
                     onClick={() => { setService(s.code); setStep(2); }}

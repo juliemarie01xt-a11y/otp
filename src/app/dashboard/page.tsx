@@ -57,10 +57,10 @@ export default function DashboardOverviewPage() {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { id: 'wa', name: 'WhatsApp', price: '0.20', img: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg' },
-            { id: 'gv', name: 'Google Voice', price: '0.15', img: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Google_Voice_icon_%282020%29.svg' },
-            { id: 'tg', name: 'Telegram', price: '0.18', img: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg' },
-            { id: 'go', name: 'Google / Gmail', price: '0.12', img: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg' },
+            { id: 'wa', name: 'WhatsApp', price: '0.20', img: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
+            { id: 'gv', name: 'Google Voice', price: '0.15', img: 'https://img.icons8.com/color/96/google-voice.png' },
+            { id: 'tg', name: 'Telegram', price: '0.18', img: 'https://img.icons8.com/color/96/telegram-app.png' },
+            { id: 'go', name: 'Google / Gmail', price: '0.12', img: 'https://img.icons8.com/color/96/google-logo.png' },
           ].map(s => (
             <Link key={s.id} href={`/dashboard/buy`} className="bg-white p-4 rounded-xl border border-zinc-200 hover:border-blue-500 hover:shadow-md transition-all group flex items-center gap-3 relative overflow-hidden">
               <img src={s.img} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" alt={s.name} />

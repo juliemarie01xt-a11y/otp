@@ -58,13 +58,13 @@ export async function POST(request: Request) {
     if (maxPrice && userBalance < Number(maxPrice)) {
       return NextResponse.json({ 
         success: false, 
-        error: `Insufficient balance. This service costs $${maxPrice}, but your balance is $${userBalance}.` 
+        error: 'Your wallet balance is insufficient for this transaction.' 
       }, { status: 402 });
     }
 
     // Absolute minimum check just in case maxPrice wasn't provided
     if (userBalance <= PROFIT_MARGIN) {
-      return NextResponse.json({ success: false, error: 'Insufficient balance. Please top up.' }, { status: 402 });
+      return NextResponse.json({ success: false, error: 'Your wallet balance is insufficient for this transaction.' }, { status: 402 });
     }
 
     // Prepare safe fallback limit check (but DO NOT send maxPrice to the API)
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
           // SAFEGUARD: Final sanity check before deducting
           if (retailCost > userBalance) {
              await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
-             lastError = 'Insufficient balance for this route. Please top up.';
+             lastError = 'Your wallet balance is insufficient for this transaction.';
              continue;
           }
 

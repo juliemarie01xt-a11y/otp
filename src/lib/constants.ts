@@ -11,7 +11,7 @@ export const POPULAR_COUNTRIES = [
 
 export const POPULAR_SERVICES = [
   { code: 'gv', name: 'Google Voice', logo: 'https://img.icons8.com/color/96/google-voice.png' },
-  { code: 'go', name: 'Google', logo: 'https://img.icons8.com/color/96/google-logo.png' },
+  { code: 'go', name: 'Google / YouTube / Gmail', logo: 'https://img.icons8.com/color/96/google-logo.png' },
   { code: 'gmail', name: 'Gmail', logo: 'https://img.icons8.com/color/96/gmail-new.png' },
   { code: 'wa', name: 'WhatsApp', logo: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
   { code: 'tg', name: 'Telegram', logo: 'https://img.icons8.com/color/96/telegram-app.png' },
