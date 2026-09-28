@@ -248,6 +248,23 @@ export default function Home() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  const [availableRoutes, setAvailableRoutes] = useState<any[]>([]);
+  const [routesLoading, setRoutesLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await axios.get('/api/routes/available');
+        setAvailableRoutes(res.data.routes || []);
+      } catch (err) {
+        console.error('Failed to load routes');
+      } finally {
+        setRoutesLoading(false);
+      }
+    };
+    fetchRoutes();
+  }, []);
+
   const [country, setCountry] = useState(POPULAR_COUNTRIES[0].id);
   const [service, setService] = useState(POPULAR_SERVICES[0].code);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -260,7 +277,7 @@ export default function Home() {
 
   const [availability, setAvailability] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [purchasingTier, setPurchasingTier] = useState<string | null>(null);
+  const [purchasingRule, setPurchasingRule] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const apiPost = async (url: string, data: any) => {
@@ -358,17 +375,17 @@ export default function Home() {
       setError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
-      setPurchasingTier(null);
+      setPurchasingRule(null);
     }
   };
 
-  const buyNumber = async (tier: string = 'premium', price: number) => {
+  const buyNumber = async (rule_id: string, tier: string, price: number) => {
     if (!user) {
       window.location.href = "/login";
       return;
     }
     setLoading(true);
-    setPurchasingTier(tier);
+    setPurchasingRule(rule_id);
     setError('');
 
     const handlePurchaseError = (errorMsg: string) => {
@@ -399,7 +416,7 @@ export default function Home() {
       handlePurchaseError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
-      setPurchasingTier(null);
+      setPurchasingRule(null);
     }
   };
 
@@ -447,9 +464,21 @@ export default function Home() {
 
           <div className="p-5">
             {/* STEP 1: Services */}
+              {routesLoading && (
+                <div className="flex flex-col items-center justify-center py-10 text-zinc-400">
+                  <LucideLoader2 className="w-6 h-6 animate-spin mb-2" />
+                  <p className="text-sm">Loading available services...</p>
+                </div>
+              )}
+              {!routesLoading && POPULAR_SERVICES.filter(s => availableRoutes.some(r => r.internal_service === s.code)).length === 0 && (
+                <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-8 text-center">
+                  <p className="text-zinc-500 font-medium mb-1">No Services Available</p>
+                  <p className="text-sm text-zinc-400">The admin has not configured any routes yet.</p>
+                </div>
+              )}
             {step === 1 && (
               <div className="grid grid-cols-2 gap-3">
-                {POPULAR_SERVICES.map(s => (
+                {POPULAR_SERVICES.filter(s => availableRoutes.some(r => r.internal_service === s.code)).map(s => (
                   <button
                     key={s.code}
                     onClick={() => { setService(s.code); setStep(2); }}
@@ -465,7 +494,7 @@ export default function Home() {
             {/* STEP 2: Countries */}
             {step === 2 && (
               <div className="grid grid-cols-2 gap-3">
-                {availableCountries.map(c => (
+                {availableCountries.filter(c => availableRoutes.some(r => r.internal_service === service && r.country_id === c.id)).map(c => (
                   <button
                     key={c.id}
                     onClick={() => { 
@@ -513,7 +542,7 @@ export default function Home() {
                   <div className="space-y-3 mt-4">
                     {availability.options.map((opt: any) => (
                       <div 
-                        key={opt.tier} 
+                        key={opt.rule_id} 
                         className={"rounded-xl p-4 flex items-center justify-between gap-4 border transition-colors " + (
                           opt.tier === 'premium' 
                             ? 'bg-blue-50/50 border-blue-200' 
@@ -523,7 +552,8 @@ export default function Home() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             <span className={"font-bold text-sm " + (opt.tier === 'premium' ? 'text-blue-800' : 'text-zinc-700')}>
-                              {opt.tier === 'premium' ? 'High-Priority' : 'Standard'}
+                              <img src={selectedCountry.flagUrl} className="inline-block w-4 h-4 mr-1.5 object-cover rounded shadow-sm border border-black/10" alt="flag" />
+                                {opt.tier === 'premium' ? 'High-Priority' : 'Standard'} <span className="opacity-60 font-normal">({opt.server_label})</span>
                             </span>
                             {opt.tier === 'premium' && (
                               <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded">
@@ -538,7 +568,7 @@ export default function Home() {
                           </p>
                         </div>
                         <button
-                          onClick={() => buyNumber(opt.tier, opt.price)}
+                          onClick={() => buyNumber(opt.rule_id, opt.tier, opt.price)}
                           disabled={loading}
                           className={"shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 " + (
                             opt.tier === 'premium'
@@ -546,7 +576,7 @@ export default function Home() {
                               : 'bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200'
                           )}
                         >
-                          {purchasingTier === opt.tier ? (
+                          {purchasingRule === opt.rule_id ? (
                             <LucideLoader2 className="w-4 h-4 animate-spin mx-auto" />
                           ) : (
                             '$' + Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })

@@ -1,21 +1,28 @@
-'use client';
+with open('src/app/dashboard/page.tsx', 'r', encoding='utf-8') as f:
+    code = f.read()
 
-import { useEffect, useState } from 'react';
+# I will completely rewrite the return block of this component to include the new widgets.
+import re
+
+new_imports = """import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { LucidePhoneCall, LucideWallet, LucideActivity, LucideCheckCircle, LucideXCircle, LucideTrendingUp, LucideArrowRight } from 'lucide-react';
-import { getService } from '@/lib/constants';
+import { getService } from '@/lib/constants';"""
 
-export default function DashboardOverviewPage() {
-  const [stats, setStats] = useState({ total: 0, spent: 0, pending: 0, balance: 0 });
-  const [recent, setRecent] = useState<any[]>([]);
+code = code.replace("""import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { LucidePhoneCall, LucideWallet, LucideActivity, LucideCheckCircle, LucideXCircle } from 'lucide-react';
+import { getService } from '@/lib/constants';""", new_imports)
 
-  useEffect(() => {
-    const loadStats = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      
-      const { data } = await supabase
+# Add balance to state
+state_logic = """export default function DashboardOverviewPage() {
+  const [stats, setStats] = useState({ total: 0, spent: 0, pending: 0, balance: 0 });"""
+code = code.replace("export default function DashboardOverviewPage() {\n  const [stats, setStats] = useState({ total: 0, spent: 0, pending: 0 });", state_logic)
+
+# Add balance fetch
+fetch_logic = """      const { data } = await supabase
         .from('activations')
         .select('*')
         .eq('user_id', session.user.id)
@@ -31,14 +38,12 @@ export default function DashboardOverviewPage() {
         const total = data.length;
         const spent = data.filter(a => a.status === 'COMPLETED').reduce((acc, curr) => acc + curr.cost, 0);
         const pending = data.filter(a => a.status === 'PENDING').length;
-        setStats({ total, spent, pending, balance: profile ? Number(profile.balance) : 0 });
-        setRecent(data.slice(0, 3));
-      }
-    };
-    loadStats();
-  }, []);
+        setStats({ total, spent, pending, balance: profile ? Number(profile.balance) : 0 });"""
+        
+code = re.sub(r"      const \{ data \} = await supabase\n\s+\.from\('activations'\)\n\s+\.select\('\*'\)\n\s+\.eq\('user_id', session\.user\.id\)\n\s+\.order\('created_at', \{ ascending: false \}\);\n\n\s+if \(data\) \{\n\s+const total = data\.length;\n\s+const spent = data\.filter\(a => a\.status === 'COMPLETED'\)\.reduce\(\(acc, curr\) => acc \+ curr\.cost, 0\);\n\s+const pending = data\.filter\(a => a\.status === 'PENDING'\)\.length;\n\s+setStats\(\{ total, spent, pending \}\);", fetch_logic, code)
 
-  return (
+
+new_ui = """  return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -186,4 +191,10 @@ export default function DashboardOverviewPage() {
       </div>
     </div>
   );
-}
+}"""
+
+code = re.sub(r"  return \([\s\S]*\);\n}", new_ui, code)
+
+with open('src/app/dashboard/page.tsx', 'w', encoding='utf-8') as f:
+    f.write(code)
+print('done')

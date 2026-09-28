@@ -40,9 +40,10 @@ export default async function proxy(request: NextRequest) {
   if (isAdminRoute) {
     const authHeader = request.headers.get('authorization');
     const expectedPassword = process.env.ADMIN_PASSWORD;
+    const expectedEmail = process.env.ADMIN_EMAIL;
     
-    if (!expectedPassword) {
-      return new NextResponse('Admin password not configured in environment', { status: 403 });
+    if (!expectedPassword || !expectedEmail) {
+      return new NextResponse('Admin credentials not configured in environment', { status: 403 });
     }
 
     if (authHeader) {
@@ -51,7 +52,7 @@ export default async function proxy(request: NextRequest) {
       const [username, ...passParts] = decoded.split(':');
       const password = passParts.join(':');
       
-      if (password === expectedPassword) {
+      if (username === expectedEmail && password === expectedPassword) {
         // Proceed normally for authorized admin
       } else {
         return new NextResponse('Auth required', {

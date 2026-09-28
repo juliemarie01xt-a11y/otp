@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { verifyAdmin } from '@/lib/auth';
 
 import axios from 'axios';
 
@@ -16,9 +15,6 @@ const SERVICE_MAP: Record<string, { vsim: string, smsbower: string }> = {
 };
 
 export async function GET(request: Request) {
-  if (!verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized: Invalid Admin Credentials' }, { status: 401 });
-  }
   const { searchParams } = new URL(request.url);
   const country = searchParams.get('country');
   const service = searchParams.get('service');

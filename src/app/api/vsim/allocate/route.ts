@@ -14,23 +14,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { country, service, maxPrice, tier = 'premium' } = await request.json();
+    const { country, service, maxPrice, rule_id } = await request.json();
 
     if (!country || !service) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Get ALL rules for this tier (Fallback Engine)
-    const { data: rules, error: rulesError } = await supabaseAdmin
+    if (!rule_id) {
+      return NextResponse.json({ error: 'Missing rule_id' }, { status: 400 });
+    }
+
+    // 1. Get the specific rule selected by the user
+    const { data: rule, error: rulesError } = await supabaseAdmin
       .from('routing_rules')
       .select('*')
-      .eq('country_id', country)
-      .eq('internal_service', service)
-      .eq('tier', tier);
+      .eq('id', rule_id)
+      .single();
 
-    if (rulesError || !rules || rules.length === 0) {
-      return NextResponse.json({ error: 'No active route configured for this service tier.' }, { status: 404 });
+    if (rulesError || !rule) {
+      return NextResponse.json({ error: 'This route is no longer available. Please refresh prices.' }, { status: 404 });
     }
+    
+    // We put it in an array to keep the rest of the code structure the same, but it only iterates once.
+    const rules = [rule];
 
     // 2. Check User's Wallet Balance
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -178,7 +184,11 @@ export async function POST(request: Request) {
     }
 
     // 4. If loop finishes and no route succeeded
-    return NextResponse.json({ success: false, error: lastError }, { status: 400 });
+        let finalError = lastError;
+    if (!finalError.includes('balance') && !finalError.includes('Price changed')) {
+       finalError = 'This route is currently out of stock or having issues. Please try selecting one of our other available routes above!';
+    }
+    return NextResponse.json({ success: false, error: finalError }, { status: 400 });
 
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
