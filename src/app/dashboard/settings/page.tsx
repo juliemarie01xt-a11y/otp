@@ -242,7 +242,7 @@ export default function SettingsPage() {
               <h2 className="font-bold text-zinc-900">Link Telegram Bot</h2>
             </div>
             <div className="p-6">
-              <p className="text-xs text-zinc-500 mb-4">Message <b>@YourBotName</b> on Telegram with <code>/start</code> to get your ID.</p>
+              <p className="text-xs text-zinc-500 mb-4">Message <b>@SwiftOTPOfficial_bot</b> on Telegram with <code>/start</code> to get your ID.</p>
               <form onSubmit={handleLinkTelegram} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-zinc-700 mb-1.5">Telegram ID</label>
