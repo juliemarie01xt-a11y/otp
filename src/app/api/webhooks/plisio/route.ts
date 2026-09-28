@@ -52,19 +52,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // 3. Only process completed (paid in full) or mismatch (overpaid).
-    //    Per Plisio docs: mismatch = overpaid, so safe to credit.
-    //    All other statuses (pending, new, expired, cancelled, error) are ignored.
-    if (data.status !== 'completed' && data.status !== 'mismatch') {
+    // 3. Process completed (paid in full), mismatch (overpaid), or expired (partial payment).
+    //    Per Plisio docs: mismatch = overpaid, expired = may have partial payment.
+    if (data.status !== 'completed' && data.status !== 'mismatch' && data.status !== 'expired') {
       return NextResponse.json({ success: true, message: `Status '${data.status}' ignored` });
     }
 
-    // 4. Extract order data (per Plisio invoice callback docs, these are top-level fields)
+    // 4. Extract order data
     const orderId = data.order_number;
     const amountPaidStr = data.source_amount;
 
     if (!orderId || !amountPaidStr) {
       return NextResponse.json({ error: 'Missing order_number or source_amount' }, { status: 400 });
+    }
+    
+    // If it expired, verify they actually paid something. If $0, ignore it.
+    if (data.status === 'expired' && Number(amountPaidStr) <= 0) {
+      return NextResponse.json({ success: true, message: 'Expired with no payment, ignored' });
     }
 
     // 5. ATOMIC LOCK: Update the pending deposit to COMPLETED.
@@ -87,8 +91,12 @@ export async function POST(request: Request) {
     }
 
     // 6. Credit the user's wallet ATOMICALLY using SQL RPC
-    //    This prevents lost deposits when two webhooks fire simultaneously.
-    const addedAmount = Number(amountPaidStr);
+    //    We deduct the 0.5% profit cut we added upfront (divide by 1.005)
+    let addedAmount = Number(amountPaidStr) / 1.005;
+    
+    // Round to 4 decimal places to prevent infinite fraction floating point errors
+    addedAmount = Number(addedAmount.toFixed(4));
+    
     if (addedAmount > 0) {
       await supabaseAdmin.rpc('credit_balance', {
         p_user_id: updatedDeposit.user_id,

@@ -121,6 +121,13 @@ export default function DepositPage() {
                   placeholder="Custom amount"
                 />
               </div>
+              
+              {amount >= 1 && (
+                <div className="mt-3 flex justify-between items-center text-xs text-zinc-500 bg-zinc-50 px-3 py-2 rounded border border-zinc-100">
+                  <span>Estimated Total (incl. 1.5% fee):</span>
+                  <span className="font-semibold text-zinc-900">${(amount * 1.015).toFixed(2)}</span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -140,7 +147,13 @@ export default function DepositPage() {
                 <>Pay with crypto <LucideArrowRight className="w-4 h-4" /></>
               )}
             </button>
-            <p className="text-center text-[11px] text-zinc-400 font-medium">
+            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 mt-4">
+              <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
+                <strong className="font-bold">Don't worry about exact amounts!</strong><br />
+                If you underpay or overpay, our system will automatically detect the exact amount of crypto we receive and credit your wallet fairly.
+              </p>
+            </div>
+            <p className="text-center text-[11px] text-zinc-400 font-medium mt-2">
               Secured by Plisio. USDT, Bitcoin, and Litecoin accepted.
             </p>
           </div>
