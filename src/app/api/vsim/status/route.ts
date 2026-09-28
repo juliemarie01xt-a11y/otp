@@ -1,5 +1,5 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import axios from 'axios';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const VSIM_API_URL = 'https://api.vsimpro.com/stubs/handler_api.php';
@@ -39,15 +39,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await axios.get(TARGET_API_URL, {
-      params: {
-        api_key: TARGET_API_KEY,
-        action: 'getStatus',
-        id: realId,
-      }
-    });
+    const url = new URL(TARGET_API_URL);
+    url.searchParams.append('api_key', TARGET_API_KEY);
+    url.searchParams.append('action', 'getStatus');
+    url.searchParams.append('id', realId);
 
-    const data = response.data;
+    const response = await fetch(url.toString());
+    const data = await response.text();
     
     // data is typically a string like "STATUS_WAIT_CODE", "STATUS_OK:123456", "STATUS_CANCEL"
     if (typeof data === 'string') {
