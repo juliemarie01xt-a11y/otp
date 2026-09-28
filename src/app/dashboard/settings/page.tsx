@@ -74,13 +74,13 @@ export default function SettingsPage() {
     setTgMsg({ type: '', text: '' });
     
     try {
-      const res = await fetch('/api/user/link-telegram', {
+      const res = await fetch(`/api/user/link-telegram?t=${Date.now()}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ telegramId: telegramId.trim() })
+        body: JSON.stringify({ telegramId: String(telegramId).trim() })
       });
       const data = await res.json();
 
@@ -90,7 +90,7 @@ export default function SettingsPage() {
         setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
       }
     } catch (err: any) {
-      setTgMsg({ type: 'error', text: 'Server error occurred' });
+      setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
     }
     setTgLoading(false);
   };
