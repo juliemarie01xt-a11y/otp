@@ -10,12 +10,13 @@ import { POPULAR_COUNTRIES, POPULAR_SERVICES, getCountry, getService } from '@/l
 
 
 // â”€â”€ Active Number Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activation: any, user: any, fetchWallet: any, onCancel: any }) => {
+const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain }: { activation: any, user: any, fetchWallet: any, onCancel: any, onBuyAgain: any }) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [otpCode, setOtpCode] = useState('');
   const [polling, setPolling] = useState(false);
   const [warning, setWarning] = useState('');
   const [loading, setLoading] = useState(false);
+  const [buyingAgain, setBuyingAgain] = useState(false);
   const [error, setError] = useState('');
 
   const apiPost = async (url: string, data: any) => {
@@ -163,20 +164,20 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
         </div>
       )}
       
-      <div className="p-5">
+      <div className="p-3">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Service icon + number */}
           <div className="flex items-center gap-4 min-w-0">
             <div className="relative shrink-0">
-              <div className="w-11 h-11 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-100">
-                <img src={getService(activation.service).logo} alt="Service" className="w-7 h-7 object-contain" />
+              <div className="w-8 h-8 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-100">
+                <img src={getService(activation.service).logo} alt="Service" className="w-5 h-5 object-contain" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full overflow-hidden border-2 border-white bg-white">
                 <img src={getCountry(activation.country).flagUrl} alt="Flag" className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="min-w-0">
-              <div className="font-mono text-lg font-bold text-zinc-900 tracking-wide">
+              <div className="font-mono text-base font-bold text-zinc-900 tracking-wide">
                 +{activation.phoneNumber}
               </div>
               <button 
@@ -196,12 +197,16 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
                 <div className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-0.5 flex items-center gap-1 justify-end">
                   <LucideCheckCircle className="w-3 h-3" /> Received
                 </div>
-                <button 
-                  onClick={() => copyToClipboard(otpCode)}
-                  className="font-mono text-2xl font-black text-emerald-600 tracking-widest hover:text-emerald-700 transition-colors cursor-pointer"
-                >
-                  {otpCode}
-                </button>
+                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                  <span className="font-mono text-xl font-black text-emerald-600 tracking-widest">{otpCode}</span>
+                  <button 
+                    onClick={() => copyToClipboard(otpCode)}
+                    className="p-1.5 hover:bg-emerald-100 rounded-md text-emerald-600 transition-colors"
+                    title="Copy OTP"
+                  >
+                    <LucideCopy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -227,6 +232,25 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
         </div>
       </div>
 
+      {/* Actions Row */}
+      <div className="bg-zinc-50/80 px-4 py-2.5 flex items-center justify-end border-t border-zinc-100">
+         <button 
+           onClick={async () => {
+             setBuyingAgain(true);
+             try {
+               await onBuyAgain(activation);
+             } finally {
+               setBuyingAgain(false);
+             }
+           }}
+           disabled={buyingAgain}
+           className="px-4 py-1.5 bg-white text-zinc-700 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-300 shadow-sm text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+         >
+           {buyingAgain ? <LucideLoader2 className="w-3.5 h-3.5 animate-spin" /> : <LucidePlus className="w-3.5 h-3.5" />}
+           {buyingAgain ? 'Buying...' : 'Buy Again'}
+         </button>
+      </div>
+      
       {warning && (
         <div className="bg-amber-50 border-t border-amber-100 px-5 py-2.5 text-xs font-medium text-amber-700 text-center">
           {warning}
@@ -376,8 +400,67 @@ export default function Home() {
     } finally {
       setLoading(false);
       setPurchasingRule(null);
+      }
+    };
+
+  const handleBuyAgain = async (activation: any) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const buyCountry = activation.country;
+      const buyService = activation.service;
+      
+      const res = await axios.get(`/api/vsim/prices?country=${buyCountry}&service=${buyService}`);
+      const prices = res.data.options;
+      if (!prices || prices.length === 0) {
+        setError('This route is completely out of stock and no longer available.');
+        setLoading(false);
+        return;
+      }
+      
+      // If we have the exact rule_id (new purchases in this session)
+      let selectedRoute = prices.find((p: any) => p.rule_id === activation.rule_id);
+      
+      // If rule_id is missing (old purchases from DB), try to match the exact target API
+      if (!selectedRoute) {
+        let targetApi = '';
+        if (activation.activationId && activation.activationId.includes('::')) {
+           targetApi = activation.activationId.split('::')[0];
+        } else if (activation.vsim_activation_id && activation.vsim_activation_id.includes('::')) {
+           targetApi = activation.vsim_activation_id.split('::')[0];
+        }
+        if (targetApi) {
+           selectedRoute = prices.find((p: any) => p.rule_id && p.tier && p.price && p.source === targetApi);
+        }
+      }
+      
+      // If we STILL can't match it, just use the cheapest one available as a fallback
+      if (!selectedRoute) {
+         selectedRoute = prices[0];
+      }
+      
+      const payload = { country: buyCountry, service: buyService, tier: selectedRoute.tier, maxPrice: selectedRoute.price, rule_id: selectedRoute.rule_id };
+      const allocateRes = await apiPost('/api/vsim/allocate', payload);
+      
+      if (allocateRes.data.success) {
+        setActivations((prev: any[]) => [allocateRes.data, ...prev]);
+        if (allocateRes.data.newBalance !== undefined) {
+           setWallet({ balance: allocateRes.data.newBalance });
+           window.dispatchEvent(new CustomEvent('walletUpdated', { detail: { balance: allocateRes.data.newBalance } }));
+        } else {
+           if (user?.id) fetchWallet(user.id);
+        }
+      } else {
+        setError(allocateRes.data.error || 'Failed to allocate (Out of stock)');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const buyNumber = async (rule_id: string, tier: string, price: number) => {
     if (!user) {
@@ -417,27 +500,15 @@ export default function Home() {
     } finally {
       setLoading(false);
       setPurchasingRule(null);
-    }
-  };
+      }
+    };
+
+  
+
 
   return (
     <div className="max-w-2xl mx-auto w-full">
       <main className="max-w-2xl mx-auto px-5 py-8">
-        {/* Active Number Cards */}
-        {activations.length > 0 && (
-          <div className="space-y-3 mb-8">
-            {activations.map(act => (
-              <ActiveNumberCard
-                key={act.activationId || act.id}
-                activation={act}
-                user={user}
-                fetchWallet={fetchWallet}
-                onCancel={(id: string) => setActivations((prev: any[]) => prev.filter(a => (a.activationId || a.id) !== id))}
-              />
-            ))}
-          </div>
-        )}
-
         {/* Select Service Wizard */}
         <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
           {/* Header */}
@@ -462,7 +533,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="p-5">
+          <div className="p-3">
             {/* STEP 1: Services */}
               {routesLoading && (
                 <div className="flex flex-col items-center justify-center py-10 text-zinc-400">
@@ -591,7 +662,24 @@ export default function Home() {
           </div>
         </div>
 
-      </main>
+      
+        {/* Active Number Cards */}{activations.length > 0 && (
+          <div className="space-y-3 mb-8">
+            {activations.map(act => (
+              <ActiveNumberCard
+                  key={act.activationId || act.id}
+                  activation={act}
+                  user={user}
+                  fetchWallet={fetchWallet}
+                  onCancel={(id: string) => setActivations((prev: any[]) => prev.filter(a => (a.activationId || a.id) !== id))}
+                  onBuyAgain={() => handleBuyAgain(act)}
+                />
+            ))}
+          </div>
+        )}
+
+        
+        </main>
     </div>
   );
 }

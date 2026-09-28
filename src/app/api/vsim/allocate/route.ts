@@ -169,6 +169,8 @@ export async function POST(request: Request) {
             activationId: `${rule.target_api}::${actId}`,
             phoneNumber: phone,
             cost: retailCost,
+            rule_id: rule.id,
+            target_api: rule.target_api,
             newBalance: newBalance,
             country: countryStr,
             service: serviceStr,

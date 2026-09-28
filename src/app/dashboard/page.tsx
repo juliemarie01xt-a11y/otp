@@ -9,6 +9,7 @@ import { getService } from '@/lib/constants';
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ total: 0, spent: 0, pending: 0, balance: 0 });
   const [recent, setRecent] = useState<any[]>([]);
+  const [trendingPrices, setTrendingPrices] = useState<Record<string, string>>({ wa: '0.20', gv: '0.20', tg: '0.18', go: '0.12' });
 
   useEffect(() => {
     const loadStats = async () => {
@@ -26,6 +27,34 @@ export default function DashboardOverviewPage() {
         .select('balance')
         .eq('id', session.user.id)
         .single();
+
+      // Fetch dynamic prices for trending widgets
+      try {
+        const pricesRes = await fetch('/api/routes/available').then(r => r.json());
+        if (pricesRes.routes) {
+          const newPrices = { ...trendingPrices };
+          const services = ['wa', 'gv', 'tg', 'go'];
+          
+          for (const s of services) {
+            const routes = pricesRes.routes.filter((r: any) => r.internal_service === s);
+            if (routes.length > 0) {
+              let minWholesale = Infinity;
+              for (const r of routes) {
+                let cost = r.cached_wholesale_cost;
+                if (r.country_id === '12' && s === 'gv' && cost < 0.188) {
+                  cost = 0.188;
+                }
+                if (cost < minWholesale) minWholesale = cost;
+              }
+              const finalPrice = (minWholesale + 0.012).toFixed(2);
+              newPrices[s] = finalPrice;
+            }
+          }
+          setTrendingPrices(newPrices);
+        }
+      } catch (e) {
+        console.error('Failed to fetch trending prices', e);
+      }
 
       if (data) {
         const total = data.length;
@@ -57,15 +86,15 @@ export default function DashboardOverviewPage() {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { id: 'wa', name: 'WhatsApp', price: '0.20', img: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
-            { id: 'gv', name: 'Google Voice', price: '0.20', img: 'https://img.icons8.com/color/96/google-voice.png' },
-            { id: 'tg', name: 'Telegram', price: '0.18', img: 'https://img.icons8.com/color/96/telegram-app.png' },
-            { id: 'go', name: 'Google / Gmail', price: '0.12', img: 'https://img.icons8.com/color/96/google-logo.png' },
+            { id: 'wa', name: 'WhatsApp', price: trendingPrices.wa, img: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
+            { id: 'gv', name: 'Google Voice', price: trendingPrices.gv, img: 'https://img.icons8.com/color/96/google-voice.png' },
+            { id: 'tg', name: 'Telegram', price: trendingPrices.tg, img: 'https://img.icons8.com/color/96/telegram-app.png' },
+            { id: 'go', name: 'Google / YouTube / Gmail', price: trendingPrices.go, img: 'https://img.icons8.com/color/96/google-logo.png' },
           ].map(s => (
             <Link key={s.id} href={`/dashboard/buy`} className="bg-white p-4 rounded-xl border border-zinc-200 hover:border-blue-500 hover:shadow-md transition-all group flex items-center gap-3 relative overflow-hidden">
               <img src={s.img} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" alt={s.name} />
               <div>
-                <p className="font-bold text-zinc-900 text-sm whitespace-nowrap">{s.name}</p>
+                <p className="font-bold text-zinc-900 text-sm leading-tight line-clamp-2">{s.name}</p>
                 <p className="text-xs text-zinc-500">from ${s.price}</p>
               </div>
             </Link>
