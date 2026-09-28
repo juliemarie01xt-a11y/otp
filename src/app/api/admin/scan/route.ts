@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { verifyAdmin } from '@/lib/auth';
+
 import axios from 'axios';
 
 const VSIM_API_URL = 'https://api.vsimpro.com/stubs/handler_api.php';
@@ -10,10 +12,13 @@ const SMSBOWER_API_KEY = process.env.SMSBOWER_API_KEY || '';
 // Hardcoded map per user instructions
 const SERVICE_MAP: Record<string, { vsim: string, smsbower: string }> = {
     'gv': { vsim: 'lvbv', smsbower: 'gf' },
-    'gmail': { vsim: 'api', smsbower: 'go' }
+    'go': { vsim: 'api', smsbower: 'go' }
 };
 
 export async function GET(request: Request) {
+  if (!verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized: Invalid Admin Credentials' }, { status: 401 });
+  }
   const { searchParams } = new URL(request.url);
   const country = searchParams.get('country');
   const service = searchParams.get('service');
@@ -22,8 +27,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid country or service' }, { status: 400 });
   }
 
-  const vsimCode = SERVICE_MAP[service].vsim;
-  const bowerCode = SERVICE_MAP[service].smsbower;
+  let vsimCode = SERVICE_MAP[service].vsim;
+  let bowerCode: string | null = SERVICE_MAP[service].smsbower;
+
+  // Handle Google Voice overrides
+  if (service === 'gv') {
+    if (country === '36') vsimCode = 'lcv'; // Canada Google Voice
+    bowerCode = null; // SMSBOWER does not support Google Voice
+  }
   let allOptions: any[] = [];
 
   try {
@@ -73,7 +84,7 @@ export async function GET(request: Request) {
     }
 
     // --- SMSBOWER SCAN ---
-    if (SMSBOWER_API_KEY) {
+    if (SMSBOWER_API_KEY && bowerCode) {
       try {
         const bowerRes = await axios.get(SMSBOWER_API_URL, { 
             params: { api_key: SMSBOWER_API_KEY, action: 'getPricesV3', country, service: bowerCode },
@@ -81,8 +92,8 @@ export async function GET(request: Request) {
         });
         const bData = bowerRes.data;
 
-        if (bData && typeof bData === 'object' && bData[country] && bData[country][bowerCode]) {
-          const providers = bData[country][bowerCode];
+        if (bData && typeof bData === 'object' && bData[country] && bData[country][bowerCode as string]) {
+          const providers = bData[country][bowerCode as string];
           Object.entries(providers).forEach(([providerId, pData]: [string, any]) => {
             allOptions.push({
               api: 'smsbower',

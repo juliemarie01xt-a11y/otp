@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUserId } from '@/lib/auth';
 
 const VSIM_API_URL = 'https://api.vsimpro.com/stubs/handler_api.php';
 const VSIM_API_KEY = process.env.VSIM_API_KEY || '';
@@ -10,10 +11,16 @@ const SMSBOWER_API_KEY = process.env.SMSBOWER_API_KEY || '';
 
 export async function POST(request: Request) {
   try {
-    const { id, userId } = await request.json();
+    // VERIFY AUTH — extract userId from JWT, never trust the body
+    const userId = await getAuthUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (!id || !userId) {
-      return NextResponse.json({ error: 'Missing activation id or user id' }, { status: 400 });
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing activation id' }, { status: 400 });
     }
 
     // Determine the source and real ID

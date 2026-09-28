@@ -1,8 +1,7 @@
-'use client';
-
+"use client";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LucidePhone, LucideGlobe, LucideSearch, LucideShield, LucideServer, LucideDollarSign, LucideActivity, LucideLoader2, LucideCheckCircle, LucideX } from 'lucide-react';
+import { LucidePhone, LucideGlobe, LucideSearch, LucideShield, LucideServer, LucideDollarSign, LucideActivity, LucideLoader2, LucideCheckCircle, LucideX, LucideSave, LucideAlertTriangle } from 'lucide-react';
 
 import { POPULAR_COUNTRIES, POPULAR_SERVICES } from '@/lib/constants';
 
@@ -14,45 +13,131 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   
   const [activeRules, setActiveRules] = useState<any[]>([]);
+  const [stagedRules, setStagedRules] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [apiFilter, setApiFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [hideEmpty, setHideEmpty] = useState(false);
+
+
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('adminEmail');
+    const savedPassword = localStorage.getItem('adminPassword');
+    if (savedEmail && savedPassword) {
+      setAdminEmail(savedEmail);
+      setAdminPassword(savedPassword);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('adminEmail', adminEmail);
+    localStorage.setItem('adminPassword', adminPassword);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminPassword');
+    setIsAuthenticated(false);
+    setAdminEmail('');
+    setAdminPassword('');
+  };
+
+  const getHeaders = () => ({
+    headers: {
+      'x-admin-email': adminEmail,
+      'x-admin-password': adminPassword
+    }
+  });
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
+        <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700">
+              <LucideShield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Admin Login</h1>
+              <p className="text-xs text-zinc-400">Restricted Access</p>
+            </div>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Admin Email</label>
+              <input type="email" required value={adminEmail} onChange={e => setAdminEmail(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-zinc-700" placeholder="admin@example.com" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Password</label>
+              <input type="password" required value={adminPassword} onChange={e => setAdminPassword(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-zinc-700" placeholder="Password" />
+            </div>
+            <button type="submit" className="w-full bg-white text-zinc-900 font-semibold text-sm py-2.5 rounded-lg mt-2 hover:bg-zinc-200 transition-colors">Login to Dashboard</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const availableCountries = service === 'gv' ? POPULAR_COUNTRIES.filter(c => ['12', '187', '36'].includes(c.id)) : POPULAR_COUNTRIES;
+
+  // Unsaved changes detection
+  const stripRule = (r: any) => ({
+    target_api: r.target_api,
+    target_service_code: r.target_service_code,
+    target_operator: r.target_operator || null,
+    target_provider: r.target_provider || null,
+    tier: r.tier
+  });
+
+  const getCompareString = (rules: any[]) => JSON.stringify(
+    rules.map(stripRule).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+  );
+
+  const hasUnsavedChanges = getCompareString(activeRules) !== getCompareString(stagedRules);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      if (!confirm('You have unsaved changes. Are you sure you want to switch?')) return;
+    }
+    fetchActiveRules();
+  }, [country, service]);
 
   const fetchActiveRules = async () => {
     try {
-      const res = await axios.get('/api/admin/set-route');
-      
-      setActiveRules(res.data.rules?.filter((r: any) => r.country_id === country && r.internal_service === service) || []);
+      const res = await axios.get('/api/admin/set-route', getHeaders());
+      const filtered = res.data.rules?.filter((r: any) => r.country_id === country && r.internal_service === service) || [];
+      setActiveRules(filtered);
+      setStagedRules(JSON.parse(JSON.stringify(filtered)));
     } catch(err) {
       console.error(err);
     }
   };
 
-  const deleteRoute = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this route?')) return;
-    try {
-      await axios.post('/api/admin/delete-route', {
-        id: id
-      });
-      fetchActiveRules();
-    } catch(err: any) {
-      alert('Error deleting route: ' + (err.response?.data?.error || err.message));
-    }
-  };
-
-  useEffect(() => {
-    fetchActiveRules();
-  }, [country, service]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [hideEmpty, setHideEmpty] = useState(true);
-  const [apiFilter, setApiFilter] = useState('all');
-
-  const fetchAllPrices = async () => {
+  const scanMarket = async () => {
     setLoading(true);
     setError('');
     setOptions([]);
     try {
-      const res = await axios.get('/api/admin/scan', {
-        params: { country, service }
-      });
+      const res = await axios.get('/api/admin/scan', { params: { country, service }, ...getHeaders() });
       setOptions(res.data.options || []);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
@@ -61,102 +146,145 @@ export default function AdminPage() {
     }
   };
 
-  const setRoute = async (opt: any, tier: string) => {
+  const deleteRouteLocal = (api: string, code: string, operator: any, provider: any, tier: string) => {
+    setStagedRules(prev => prev.filter(r => !(
+      r.target_api === api && 
+      r.target_service_code === code && 
+      r.target_operator == operator && 
+      r.target_provider == provider && 
+      r.tier === tier
+    )));
+  };
+
+  const addRouteLocal = (opt: any, tier: string) => {
+    const newRule = {
+      country_id: country,
+      internal_service: service,
+      target_api: opt.api,
+      target_service_code: opt.code,
+      target_operator: opt.operator || null,
+      target_provider: opt.provider || null,
+      tier
+    };
+    setStagedRules(prev => [...prev, newRule]);
+  };
+
+  const saveChanges = async () => {
+    setIsSaving(true);
     try {
-      await axios.post('/api/admin/set-route', {
+      await axios.post('/api/admin/bulk-set-routes', {
         country_id: country,
         internal_service: service,
-        target_api: opt.api,
-        target_service_code: opt.code,
-        target_operator: opt.operator,
-        target_provider: opt.provider,
-        tier
-      });
-      alert(`Active ${tier} Route Updated!`);
-      fetchActiveRules();
-    } catch(err: any) {
-      alert('Error updating route: ' + (err.response?.data?.error || err.message));
+        rules: stagedRules
+      }, getHeaders());
+      alert('Changes saved successfully! Prices are syncing in the background.');
+      await fetchActiveRules();
+    } catch (err: any) {
+      alert('Error saving routes: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Filter and sort the options
   const filteredOptions = options.filter(opt => {
-    if (hideEmpty && opt.count === 0) return false;
     if (apiFilter !== 'all' && opt.api !== apiFilter) return false;
-    
+    if (hideEmpty && opt.count <= 0) return false;
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
-      return (
-        opt.api.toLowerCase().includes(search) ||
-        (opt.operator && opt.operator.toString().toLowerCase().includes(search)) ||
-        (opt.provider && opt.provider.toString().toLowerCase().includes(search)) ||
-        opt.price.toString().includes(search)
-      );
+      return (opt.operator?.toLowerCase() || '').includes(search) || 
+             (opt.provider?.toString() || '').includes(search);
     }
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        <header className="flex items-center justify-between border-b border-slate-700 pb-4">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-32">
+      {/* Unsaved Changes Banner */}
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-0 left-0 right-0 bg-amber-600 text-white p-4 z-50 flex items-center justify-between shadow-2xl border-t border-amber-500 animate-in slide-in-from-bottom-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-600 rounded-lg">
+            <LucideAlertTriangle className="w-6 h-6" />
+            <div>
+              <p className="font-bold">You have unsaved changes!</p>
+              <p className="text-sm text-amber-100">Don't forget to save your routes before leaving.</p>
+            </div>
+          </div>
+          <button 
+            onClick={saveChanges}
+            disabled={isSaving}
+            className="flex items-center gap-2 bg-white text-amber-700 px-6 py-2.5 rounded-lg font-bold hover:bg-amber-50 active:scale-95 transition-all disabled:opacity-50"
+          >
+            {isSaving ? <LucideLoader2 className="w-5 h-5 animate-spin" /> : <LucideSave className="w-5 h-5" />}
+            {isSaving ? 'Saving...' : 'Save & Sync'}
+          </button>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="bg-slate-900 border-b border-slate-800 p-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
               <LucideShield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Aggregator Admin</h1>
-              <p className="text-slate-400 text-sm">Cross-API Routing Control Panel</p>
+              <h1 className="text-xl font-black text-white tracking-tight">Admin Routing Dashboard</h1>
+              <p className="text-sm text-slate-400 font-medium">Configure global routing algorithms</p>
             </div>
           </div>
-          <a href="/" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-            Back to App
-          </a>
-        </header>
+        </div>
+      </div>
 
-        {/* Control Panel */}
-        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Target Country</label>
-              <select 
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
-              >
-                {POPULAR_COUNTRIES.map(c => (
-                  <option key={c.id} value={c.id}>{c.flag} {c.name} ({c.id})</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Target Service</label>
-              <select 
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 font-bold"
-              >
-                {POPULAR_SERVICES.map(s => (
-                  <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-col md:flex-row items-center gap-4">
-            <button 
-              onClick={fetchAllPrices}
-              disabled={loading}
-              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex justify-center items-center gap-2 shadow"
+      <div className="max-w-6xl mx-auto p-6 mt-4">
+        
+        {/* Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Country</label>
+            <select 
+              value={country} 
+              onChange={(e) => setCountry(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 font-medium"
             >
-              {loading ? <LucideLoader2 className="w-5 h-5 animate-spin" /> : <LucideSearch className="w-5 h-5" />}
-              Scan Market
-            </button>
+              {availableCountries.map(c => (
+                <option key={c.id} value={c.id}>{c.short} {c.name} ({c.id})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Service</label>
+            <select 
+              value={service} 
+              onChange={(e) => setService(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 font-medium"
+            >
+              {POPULAR_SERVICES.map(s => (
+                <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-6">
+          <button
+            onClick={scanMarket}
+            disabled={loading}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-6 py-4 rounded-xl font-bold shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+          >
+            {loading ? <LucideLoader2 className="w-5 h-5 animate-spin" /> : <LucideSearch className="w-5 h-5" />}
+            Scan Market
+          </button>
+          
+          <div className="flex flex-wrap gap-4 flex-1">
+            {stagedRules.length === 0 && (
+              <div className="flex items-center gap-2 text-slate-500 italic py-4">
+                No active routes for this combination.
+              </div>
+            )}
             
-            {activeRules.map((rule, idx) => (
-               <div key={idx} className={`flex-1 border rounded-lg p-3 flex items-center justify-between gap-3 ${rule.tier === 'premium' ? 'border-amber-500/50 bg-amber-900/20 text-amber-100' : 'border-slate-500/50 bg-slate-800 text-slate-200'}`}>
+            {stagedRules.map((rule, idx) => (
+               <div key={idx} className={`flex-1 min-w-[200px] border rounded-lg p-3 flex items-center justify-between gap-3 ${rule.tier === 'premium' ? 'border-amber-500/50 bg-amber-900/20 text-amber-100' : 'border-slate-500/50 bg-slate-800 text-slate-200'}`}>
                   <div className="flex items-center gap-3">
                     <LucideCheckCircle className={`w-6 h-6 ${rule.tier === 'premium' ? 'text-amber-400' : 'text-slate-400'}`} />
                     <div>
@@ -167,7 +295,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => deleteRoute(rule.id)}
+                    onClick={() => deleteRouteLocal(rule.target_api, rule.target_service_code, rule.target_operator, rule.target_provider, rule.tier)}
                     className="p-1.5 rounded bg-black/20 hover:bg-red-500/50 hover:text-white transition-colors"
                     title="Remove route"
                   >
@@ -179,7 +307,7 @@ export default function AdminPage() {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-900/50 border border-red-700 text-red-200 rounded-lg">
+          <div className="p-4 bg-red-900/50 border border-red-700 text-red-200 rounded-lg mt-6">
             {error}
           </div>
         )}
@@ -241,8 +369,8 @@ export default function AdminPage() {
                   {filteredOptions.length === 0 ? (
                     <tr><td colSpan={7} className="text-center py-8 text-slate-500">No matching providers found.</td></tr>
                   ) : filteredOptions.map((opt, i) => {
-                    const activePremium = activeRules.find(r => r.tier === 'premium' && r.target_api === opt.api && r.target_service_code === opt.code && r.target_operator == opt.operator && r.target_provider == opt.provider);
-                    const activeStandard = activeRules.find(r => r.tier === 'standard' && r.target_api === opt.api && r.target_service_code === opt.code && r.target_operator == opt.operator && r.target_provider == opt.provider);
+                    const activePremium = stagedRules.find(r => r.tier === 'premium' && r.target_api === opt.api && r.target_service_code === opt.code && r.target_operator == opt.operator && r.target_provider == opt.provider);
+                    const activeStandard = stagedRules.find(r => r.tier === 'standard' && r.target_api === opt.api && r.target_service_code === opt.code && r.target_operator == opt.operator && r.target_provider == opt.provider);
                     const isActive = activePremium || activeStandard;
                     return (
                     <tr key={i} className={`hover:bg-slate-750 transition-colors ${isActive ? 'bg-slate-700/50' : 'bg-slate-800'}`}>
@@ -267,14 +395,14 @@ export default function AdminPage() {
                       <td className="px-6 py-4 text-right">
                          <div className="flex flex-col gap-1 items-end">
                            {activePremium ? (
-                             <span className="text-xs font-bold text-amber-500 uppercase">Premium</span>
+                             <button onClick={() => deleteRouteLocal(opt.api, opt.code, opt.operator, opt.provider, 'premium')} className="text-xs font-bold text-amber-500 uppercase hover:text-red-400 cursor-pointer">Remove Premium</button>
                            ) : (
-                             <button onClick={() => setRoute(opt, 'premium')} className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium">Set Premium</button>
+                             <button onClick={() => addRouteLocal(opt, 'premium')} className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium">Set Premium</button>
                            )}
                            {activeStandard ? (
-                             <span className="text-xs font-bold text-slate-400 uppercase">Standard</span>
+                             <button onClick={() => deleteRouteLocal(opt.api, opt.code, opt.operator, opt.provider, 'standard')} className="text-xs font-bold text-slate-400 uppercase hover:text-red-400 cursor-pointer">Remove Standard</button>
                            ) : (
-                             <button onClick={() => setRoute(opt, 'standard')} className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium">Set Standard</button>
+                             <button onClick={() => addRouteLocal(opt, 'standard')} className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium">Set Standard</button>
                            )}
                          </div>
                       </td>

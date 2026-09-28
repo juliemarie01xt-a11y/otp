@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUserId } from '@/lib/auth';
 
 const VSIM_API_URL = 'https://api.vsimpro.com/stubs/handler_api.php';
 const SMSBOWER_API_URL = 'https://smsbower.page/stubs/handler_api.php';
 
 export async function POST(request: Request) {
   try {
-    const { country, service, maxPrice, userId, tier = 'premium' } = await request.json();
+    // VERIFY AUTH — extract userId from JWT, never trust the body
+    const userId = await getAuthUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (!country || !service || !userId) {
+    const { country, service, maxPrice, tier = 'premium' } = await request.json();
+
+    if (!country || !service) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -95,9 +102,11 @@ export async function POST(request: Request) {
 
           let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
           
-          // HARDCODE: VSIMPRO Google Voice (USA) is always $0.15 flat rate
+          // HARDCODE: VSIMPRO Google Voice (USA) Minimum Floor Price is $0.15
           if (country === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
-             retailCost = 0.15;
+             if (retailCost < 0.15) {
+                 retailCost = 0.15;
+             }
           }
 
           const actId = data.activationId || data.id;

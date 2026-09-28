@@ -37,7 +37,10 @@ export default function DepositPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('/api/deposit', { userId: user.id, amount });
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await axios.post('/api/deposit', { amount }, {
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+      });
       if (res.data.success && res.data.invoice_url) {
         window.location.href = res.data.invoice_url;
       } else {

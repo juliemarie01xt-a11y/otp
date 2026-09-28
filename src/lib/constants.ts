@@ -1,5 +1,6 @@
 export const POPULAR_COUNTRIES = [
   { id: '12', name: 'USA (Virtual)', short: 'USA', flagUrl: 'https://flagcdn.com/w40/us.png', flag: '🇺🇸' },
+  { id: '36', name: 'Canada', short: 'CAN', flagUrl: 'https://flagcdn.com/w40/ca.png', flag: '🇨🇦' },
   { id: '187', name: 'USA (Physical)', short: 'USA', flagUrl: 'https://flagcdn.com/w40/us.png', flag: '🇺🇸' },
   { id: '16', name: 'United Kingdom', short: 'GBR', flagUrl: 'https://flagcdn.com/w40/gb.png', flag: '🇬🇧' },
   { id: '33', name: 'Colombia', short: 'COL', flagUrl: 'https://flagcdn.com/w40/co.png', flag: '🇨🇴' },
@@ -10,9 +11,7 @@ export const POPULAR_COUNTRIES = [
 
 export const POPULAR_SERVICES = [
   { code: 'gv', name: 'Google Voice', logo: 'https://img.icons8.com/color/96/google-voice.png' },
-  { code: 'gmail', name: 'Gmail', logo: 'https://img.icons8.com/color/96/gmail-new.png' },
-  { code: 'youtube', name: 'YouTube', logo: 'https://img.icons8.com/color/96/youtube-play.png' },
-  { code: 'go', name: 'Google', logo: 'https://img.icons8.com/color/96/google-logo.png' }
+  { code: 'go', name: 'Google / YouTube / Gmail', logo: 'https://img.icons8.com/color/96/google-logo.png' }
 ];
 
 export const getCountry = (id: string) => POPULAR_COUNTRIES.find(c => c.id === id) || { id, name: id, short: id, flagUrl: '', flag: '🏳️' };

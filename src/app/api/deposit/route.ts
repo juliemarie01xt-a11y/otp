@@ -1,15 +1,41 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUserId } from '@/lib/auth';
 
 const PLISIO_API_URL = 'https://api.plisio.net/api/v1';
 
+// Simple in-memory rate limiter: max 5 deposits per user per minute
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 5;
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const timestamps = (rateLimitMap.get(userId) || []).filter(t => now - t < RATE_LIMIT_WINDOW);
+  if (timestamps.length >= RATE_LIMIT_MAX) return true;
+  timestamps.push(now);
+  rateLimitMap.set(userId, timestamps);
+  return false;
+}
+
 export async function POST(request: Request) {
   try {
-    const { userId, amount } = await request.json();
+    // 1. VERIFY AUTH — extract userId from JWT, never trust the body
+    const userId = await getAuthUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (!userId || !amount || amount < 1) {
-      return NextResponse.json({ error: 'Invalid amount or user' }, { status: 400 });
+    const { amount } = await request.json();
+
+    if (!amount || amount < 1) {
+      return NextResponse.json({ error: 'Minimum deposit is $1' }, { status: 400 });
+    }
+
+    // 2. Rate limit check
+    if (isRateLimited(userId)) {
+      return NextResponse.json({ error: 'Too many deposit requests. Please wait a minute.' }, { status: 429 });
     }
 
     const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
@@ -17,7 +43,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payment gateway not configured' }, { status: 500 });
     }
 
-    // 1. Create a pending deposit in the database to get an Order ID
+    // 3. Create a pending deposit in the database
     const { data: deposit, error: dbError } = await supabaseAdmin
       .from('deposits')
       .insert({
@@ -32,13 +58,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize deposit' }, { status: 500 });
     }
 
-    // 2. Request an invoice from Plisio
+    // 4. Build callback URL with ?json=true so Plisio sends JSON
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
+    const successUrl = `${protocol}://${host}/dashboard/success`;
+    const failUrl = `${protocol}://${host}/dashboard/failed`;
+
+    // 5. Request an invoice from Plisio
     const response = await axios.get(`${PLISIO_API_URL}/invoices/new`, {
       params: {
         source_currency: 'USD',
         source_amount: amount,
         order_name: `Wallet Top-Up`,
         order_number: deposit.id,
+        callback_url: callbackUrl,
+        success_invoice_url: successUrl,
+        fail_invoice_url: failUrl,
         api_key: PLISIO_SECRET_KEY
       }
     });

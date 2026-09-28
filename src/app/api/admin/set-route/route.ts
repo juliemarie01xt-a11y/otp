@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { verifyAdmin } from '@/lib/auth';
+
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(request: Request) {
+  if (!verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized: Invalid Admin Credentials' }, { status: 401 });
+  }
   try {
     const { country_id, internal_service, target_api, target_service_code, target_operator, target_provider, tier = 'premium' } = await request.json();
 
@@ -47,6 +52,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  if (!verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized: Invalid Admin Credentials' }, { status: 401 });
+  }
   try {
     const { data, error } = await supabaseAdmin
       .from('routing_rules')

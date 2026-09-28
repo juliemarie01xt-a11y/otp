@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { POPULAR_COUNTRIES, POPULAR_SERVICES, getCountry, getService } from '@/lib/constants';
 
 
-// ── Active Number Card ──────────────────────────────────────────────
+// â”€â”€ Active Number Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activation: any, user: any, fetchWallet: any, onCancel: any }) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [otpCode, setOtpCode] = useState('');
@@ -17,6 +17,14 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
   const [warning, setWarning] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const apiPost = async (url: string, data: any) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return axios.post(url, data, {
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+    });
+  };
+
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,7 +39,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
     } else if (remaining <= 0 && activation.status === 'PENDING') {
       if (user) {
         setLoading(true);
-        axios.post('/api/vsim/cancel', { id: activation.activationId || activation.id, userId: user.id })
+        apiPost('/api/vsim/cancel', { id: activation.activationId || activation.id })
           .catch(() => {})
           .finally(() => {
             setLoading(false);
@@ -49,7 +57,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
           if (prev <= 1) {
             clearInterval(timer);
               if (user) {
-                axios.post('/api/vsim/cancel', { id: activation.activationId || activation.id, userId: user.id })
+                apiPost('/api/vsim/cancel', { id: activation.activationId || activation.id })
                   .then((res) => {
                     if (res.data.success && res.data.newBalance !== undefined) {
                       window.dispatchEvent(new CustomEvent('walletUpdated', { detail: { balance: res.data.newBalance } }));
@@ -103,7 +111,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
     setLoading(true);
     setWarning('');
     try {
-      const res = await axios.post('/api/vsim/cancel', { id: activation.activationId || activation.id, userId: user.id });
+      const res = await apiPost('/api/vsim/cancel', { id: activation.activationId || activation.id });
       if (res.data.success) {
         setPolling(false);
         if (res.data.newBalance !== undefined) {
@@ -229,7 +237,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel }: { activat
 }
 
 
-// ── Main Page ───────────────────────────────────────────────────────
+// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [wallet, setWallet] = useState<{ balance: number } | null>(null);
@@ -242,16 +250,26 @@ export default function Home() {
 
   const [country, setCountry] = useState(POPULAR_COUNTRIES[0].id);
   const [service, setService] = useState(POPULAR_SERVICES[0].code);
-  const [countryOpen, setCountryOpen] = useState(false);
-  const [serviceOpen, setServiceOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
 
   const selectedCountry = POPULAR_COUNTRIES.find(c => c.id === country) || POPULAR_COUNTRIES[0];
   const selectedService = POPULAR_SERVICES.find(s => s.code === service) || POPULAR_SERVICES[0];
+
+  const availableCountries = service === 'gv' ? POPULAR_COUNTRIES.filter(c => ['12', '187', '36'].includes(c.id)) : POPULAR_COUNTRIES;
 
   const [availability, setAvailability] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [purchasingTier, setPurchasingTier] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  const apiPost = async (url: string, data: any) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return axios.post(url, data, {
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+    });
+  };
+
   const [activations, setActivations] = useState<any[]>([]);
 
   const fetchWallet = async (userId: string) => {
@@ -325,12 +343,12 @@ export default function Home() {
     await supabase.auth.signOut();
   };
 
-  const checkAvailability = async () => {
+  const checkAvailability = async (cId: string = country, sCode: string = service) => {
     setLoading(true);
     setError('');
     setAvailability(null);
     try {
-      const res = await axios.get('/api/vsim/prices', { params: { country, service } });
+      const res = await axios.get('/api/vsim/prices', { params: { country: cId, service: sCode } });
       if (res.data.options && res.data.options.length > 0) {
         setAvailability(res.data);
       } else {
@@ -364,9 +382,8 @@ export default function Home() {
     };
 
     try {
-      const payload: any = { country, service, userId: user.id, tier };
-      payload.maxPrice = price;
-      const res = await axios.post('/api/vsim/allocate', payload);
+      const payload: any = { country, service, tier, maxPrice: price };
+      const res = await apiPost('/api/vsim/allocate', payload);
       if (res.data.success) {
         setActivations((prev: any[]) => [res.data, ...prev]);
         if (res.data.newBalance !== undefined) {
@@ -404,173 +421,147 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Select Service Card ──────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-zinc-200">
-          <div className="px-5 py-4 border-b border-zinc-100">
-            <h2 className="font-bold text-zinc-900">Get a number</h2>
+        {/* Select Service Wizard */}
+        <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center justify-between">
+            <h2 className="font-bold text-zinc-900 flex items-center gap-2">
+              {step === 1 && "1. Select Service"}
+              {step === 2 && "2. Select Country"}
+              {step === 3 && "3. Choose Route"}
+            </h2>
+            {step > 1 && (
+              <button 
+                onClick={() => {
+                  if (step === 3) setStep(2);
+                  if (step === 2) setStep(1);
+                  setAvailability(null);
+                  setError('');
+                }}
+                className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+              >
+                ← Back
+              </button>
+            )}
           </div>
 
-          <div className="p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {/* Country Dropdown */}
-              <div className="relative">
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Country</label>
-                <button
-                  onClick={() => { setCountryOpen(!countryOpen); setServiceOpen(false); }}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-shadow text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <img src={selectedCountry.flagUrl} alt="" className="w-5 h-4 rounded-[2px] object-cover" />
-                    <span className="font-medium text-zinc-800 truncate">{selectedCountry.name}</span>
-                  </div>
-                  <LucideChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
-                </button>
-
-                {countryOpen && (
-                  <div className="absolute z-20 w-full mt-1.5 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
-                    {POPULAR_COUNTRIES.map(c => (
-                      <button
-                        key={c.id}
-                        className={`w-full text-left px-3 py-2.5 flex items-center gap-2 text-sm hover:bg-zinc-50 transition-colors ${c.id === country ? 'bg-zinc-50 font-semibold' : ''}`}
-                        onClick={() => { setCountry(c.id); setCountryOpen(false); }}
-                      >
-                        <img src={c.flagUrl} alt="" className="w-5 h-4 rounded-[2px] object-cover" />
-                        <span className="truncate">{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Service Dropdown */}
-              <div className="relative">
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Service</label>
-                <button
-                  onClick={() => { setServiceOpen(!serviceOpen); setCountryOpen(false); }}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-shadow text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <img src={selectedService.logo} alt="" className="w-5 h-5 object-contain" />
-                    <span className="font-medium text-zinc-800 truncate">{selectedService.name}</span>
-                  </div>
-                  <LucideChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
-                </button>
-
-                {serviceOpen && (
-                  <div className="absolute z-20 w-full mt-1.5 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
-                    {POPULAR_SERVICES.map(s => (
-                      <button
-                        key={s.code}
-                        className={`w-full text-left px-3 py-2.5 flex items-center gap-2 text-sm hover:bg-zinc-50 transition-colors ${s.code === service ? 'bg-zinc-50 font-semibold' : ''}`}
-                        onClick={() => { setService(s.code); setServiceOpen(false); }}
-                      >
-                        <img src={s.logo} alt="" className="w-5 h-5 object-contain" />
-                        <span className="truncate">{s.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              onClick={checkAvailability}
-              disabled={loading}
-              className="w-full py-2.5 bg-zinc-900 text-white rounded-lg font-semibold text-sm hover:bg-zinc-800 disabled:opacity-50 transition-colors active:scale-[0.98]"
-            >
-              {loading && !purchasingTier ? (
-                <span className="flex items-center justify-center gap-2">
-                  <LucideLoader2 className="w-4 h-4 animate-spin" /> Checking...
-                </span>
-              ) : 'Check availability'}
-            </button>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="mx-5 mb-5 p-3 bg-red-50 text-red-700 rounded-lg flex items-center gap-2 text-sm font-medium border border-red-100">
-              <LucideXCircle className="w-4 h-4 shrink-0" />
-              {error}
-            </div>
-          )}
-
-          {/* Availability Results */}
-          {availability && !error && (
-            <div className="border-t border-zinc-100 p-5 space-y-3">
-              {availability.options.map((opt: any) => (
-                <div 
-                  key={opt.tier} 
-                  className={`rounded-xl p-4 flex items-center justify-between gap-4 border transition-colors ${
-                    opt.tier === 'premium' 
-                      ? 'bg-blue-50/50 border-blue-200' 
-                      : 'bg-zinc-50 border-zinc-200'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`font-bold text-sm ${opt.tier === 'premium' ? 'text-blue-800' : 'text-zinc-700'}`}>
-                        {opt.tier === 'premium' ? 'High-Priority' : 'Standard'}
-                      </span>
-                      {opt.tier === 'premium' && (
-                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded">
-                          Faster
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-500 leading-relaxed">
-                      {opt.tier === 'premium'
-                        ? 'Historically faster delivery. Success depends on source network.'
-                        : 'Success rates vary. Cancel and retry if SMS does not arrive.'}
-                    </p>
-                  </div>
+          <div className="p-5">
+            {/* STEP 1: Services */}
+            {step === 1 && (
+              <div className="grid grid-cols-2 gap-3">
+                {POPULAR_SERVICES.map(s => (
                   <button
-                    onClick={() => buyNumber(opt.tier, opt.price)}
-                    disabled={loading}
-                    className={`shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 ${
-                      opt.tier === 'premium'
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200'
-                    }`}
+                    key={s.code}
+                    onClick={() => { setService(s.code); setStep(2); }}
+                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50 transition-all active:scale-[0.98]"
                   >
-                    {purchasingTier === opt.tier ? (
-                      <LucideLoader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      `$${Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`
-                    )}
+                    <img src={s.logo} alt="" className="w-10 h-10 object-contain mb-3" />
+                    <span className="text-sm font-bold text-zinc-800">{s.name}</span>
                   </button>
+                ))}
+              </div>
+            )}
+
+            {/* STEP 2: Countries */}
+            {step === 2 && (
+              <div className="grid grid-cols-2 gap-3">
+                {availableCountries.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { 
+                      setCountry(c.id); 
+                      setStep(3); 
+                      setTimeout(() => checkAvailability(c.id, service), 50); 
+                    }}
+                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50 transition-all active:scale-[0.98]"
+                  >
+                    <img src={c.flagUrl} alt="" className="w-8 h-6 rounded-[2px] object-cover mb-2 shadow-sm" />
+                    <span className="text-sm font-bold text-zinc-800 text-center">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* STEP 3: Routes & Pricing */}
+            {step === 3 && (
+              <div className="space-y-4">
+                {/* Selection Summary */}
+                <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                  <img src={selectedService.logo} alt="" className="w-6 h-6 object-contain" />
+                  <span className="text-sm font-bold text-zinc-300">+</span >
+                  <img src={selectedCountry.flagUrl} alt="" className="w-6 h-4 rounded-[2px] object-cover" />
+                  <div className="ml-auto text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                    {selectedService.name} • {selectedCountry.short}
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {loading && (
+                  <div className="py-12 flex flex-col items-center justify-center text-zinc-400">
+                    <LucideLoader2 className="w-8 h-8 animate-spin mb-3 text-zinc-300" />
+                    <span className="text-sm font-medium">Finding best routes...</span>
+                  </div>
+                )}
+
+                {error && !loading && (
+                  <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-start gap-3 text-sm font-medium border border-red-100">
+                    <LucideXCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <p>{error}</p>
+                  </div>
+                )}
+
+                {availability && !error && !loading && (
+                  <div className="space-y-3 mt-4">
+                    {availability.options.map((opt: any) => (
+                      <div 
+                        key={opt.tier} 
+                        className={"rounded-xl p-4 flex items-center justify-between gap-4 border transition-colors " + (
+                          opt.tier === 'premium' 
+                            ? 'bg-blue-50/50 border-blue-200' 
+                            : 'bg-zinc-50 border-zinc-200'
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className={"font-bold text-sm " + (opt.tier === 'premium' ? 'text-blue-800' : 'text-zinc-700')}>
+                              {opt.tier === 'premium' ? 'High-Priority' : 'Standard'}
+                            </span>
+                            {opt.tier === 'premium' && (
+                              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded">
+                                Faster
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-zinc-500 leading-relaxed">
+                            {opt.tier === 'premium'
+                              ? 'Historically faster delivery. Success depends on network.'
+                              : 'Success rates vary. Cancel and retry if SMS fails.'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => buyNumber(opt.tier, opt.price)}
+                          disabled={loading}
+                          className={"shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 " + (
+                            opt.tier === 'premium'
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : 'bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200'
+                          )}
+                        >
+                          {purchasingTier === opt.tier ? (
+                            <LucideLoader2 className="w-4 h-4 animate-spin mx-auto" />
+                          ) : (
+                            '$' + Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ── Info Strip ──────────────────────────────────────── */}
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-          <div className="bg-white rounded-xl border border-zinc-200 px-3 py-4">
-            <LucideShield className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
-            <div className="text-xs font-semibold text-zinc-500">Auto-refund</div>
-            <div className="text-[10px] text-zinc-400 mt-0.5">If SMS fails</div>
-          </div>
-          <div className="bg-white rounded-xl border border-zinc-200 px-3 py-4">
-            <LucidePhone className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
-            <div className="text-xs font-semibold text-zinc-500">Real numbers</div>
-            <div className="text-[10px] text-zinc-400 mt-0.5">Verified carriers</div>
-          </div>
-          <div className="bg-white rounded-xl border border-zinc-200 px-3 py-4">
-            <LucideWallet className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
-            <div className="text-xs font-semibold text-zinc-500">Crypto pay</div>
-            <div className="text-[10px] text-zinc-400 mt-0.5">USDT, BTC, LTC</div>
-          </div>
-        </div>
       </main>
-
-      {/* ── Footer ─────────────────────────────────────────────── */}
-      <footer className="max-w-2xl mx-auto px-5 py-8 mt-auto">
-        <div className="border-t border-zinc-200 pt-6 flex items-center justify-between">
-          <span className="text-xs text-zinc-400">SwiftOTP</span>
-          <a href="/admin" className="text-xs text-zinc-300 hover:text-zinc-500 transition-colors">Admin</a>
-        </div>
-      </footer>
     </div>
   );
 }
