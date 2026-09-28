@@ -477,7 +477,7 @@ export default function Home() {
                 </div>
               )}
             {step === 1 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {POPULAR_SERVICES.filter(s => s.code !== 'gmail' && availableRoutes.some(r => r.internal_service === s.code)).map(s => (
                   <button
                     key={s.code}
@@ -493,7 +493,7 @@ export default function Home() {
 
             {/* STEP 2: Countries */}
             {step === 2 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {availableCountries.filter(c => availableRoutes.some(r => r.internal_service === service && r.country_id === c.id)).map(c => (
                   <button
                     key={c.id}
@@ -543,7 +543,7 @@ export default function Home() {
                     {availability.options.map((opt: any) => (
                       <div 
                         key={opt.rule_id} 
-                        className={"rounded-xl p-4 flex items-center justify-between gap-4 border transition-colors " + (
+                        className={"rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-colors " + (
                           opt.tier === 'premium' 
                             ? 'bg-blue-50/50 border-blue-200' 
                             : 'bg-zinc-50 border-zinc-200'
@@ -570,7 +570,7 @@ export default function Home() {
                         <button
                           onClick={() => buyNumber(opt.rule_id, opt.tier, opt.price)}
                           disabled={loading}
-                          className={"shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 " + (
+                          className={"w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 " + (
                             opt.tier === 'premium'
                               ? 'bg-blue-600 hover:bg-blue-700 text-white'
                               : 'bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200'

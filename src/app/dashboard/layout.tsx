@@ -3,11 +3,12 @@
 import { ReactNode, useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import { supabase } from '@/lib/supabase';
-import { LucideWallet, LucidePlus } from 'lucide-react';
+import { LucideWallet, LucidePlus, LucideMenu } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [wallet, setWallet] = useState<{ balance: number } | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchWallet = async () => {
@@ -35,11 +36,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-50 font-[family-name:var(--font-geist-sans)] flex">
-      <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-end px-8 sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between md:justify-end px-4 md:px-8 sticky top-0 z-30">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="md:hidden p-2 -ml-2 text-zinc-600 hover:bg-zinc-100 rounded-lg"
+          >
+            <LucideMenu className="w-5 h-5" />
+          </button>
+          
           <div className="flex items-center gap-3">
             <Link 
               href="/dashboard/recharge" 
@@ -58,7 +66,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Main Content Area */}
-        <main className="p-8 max-w-5xl mx-auto w-full flex-1">
+        <main className="p-4 md:p-8 max-w-5xl mx-auto w-full flex-1">
           {children}
         </main>
       </div>

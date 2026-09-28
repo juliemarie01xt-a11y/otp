@@ -58,7 +58,7 @@ export default function DashboardOverviewPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { id: 'wa', name: 'WhatsApp', price: '0.20', img: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
-            { id: 'gv', name: 'Google Voice', price: '0.15', img: 'https://img.icons8.com/color/96/google-voice.png' },
+            { id: 'gv', name: 'Google Voice', price: '0.20', img: 'https://img.icons8.com/color/96/google-voice.png' },
             { id: 'tg', name: 'Telegram', price: '0.18', img: 'https://img.icons8.com/color/96/telegram-app.png' },
             { id: 'go', name: 'Google / Gmail', price: '0.12', img: 'https://img.icons8.com/color/96/google-logo.png' },
           ].map(s => (

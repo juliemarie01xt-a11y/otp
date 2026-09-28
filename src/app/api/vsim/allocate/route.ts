@@ -108,10 +108,10 @@ export async function POST(request: Request) {
 
           let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
           
-          // HARDCODE: VSIMPRO Google Voice (USA) Minimum Floor Price is $0.15
+          // HARDCODE: VSIMPRO Google Voice (USA) Minimum Floor Price is $0.20
           if (country === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
-             if (retailCost < 0.15) {
-                 retailCost = 0.15;
+             if (retailCost < 0.20) {
+                 retailCost = 0.20;
              }
           }
 

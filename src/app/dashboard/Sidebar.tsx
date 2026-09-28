@@ -24,7 +24,7 @@ const MENU = [
   { name: 'Help & Support', path: '/dashboard/support', icon: LucideLifeBuoy },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -35,7 +35,16 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-zinc-900 text-zinc-300 h-screen fixed top-0 left-0 flex flex-col border-r border-zinc-800">
+    <>
+    {/* Mobile Backdrop */}
+    {isOpen && (
+      <div 
+        className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+        onClick={onClose}
+      />
+    )}
+
+    <div className={`w-64 bg-zinc-900 text-zinc-300 h-screen fixed top-0 left-0 flex flex-col border-r border-zinc-800 z-50 transition-transform duration-200 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       <div className="p-6">
         <Link href="/" className="flex items-center gap-2.5 text-white">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -52,6 +61,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.path}
+              onClick={() => onClose && onClose()}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive 
                   ? 'bg-blue-600 text-white shadow-sm' 
@@ -75,5 +85,6 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

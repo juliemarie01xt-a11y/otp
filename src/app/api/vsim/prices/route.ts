@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     const processRule = (rule: any, index: number) => {
         let bestPrice = parseFloat(rule.cached_wholesale_cost);
         if (country === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
-           if (bestPrice < 0.138) bestPrice = 0.138;
+           if (bestPrice < 0.188) bestPrice = 0.188;
         }
         return {
             rule_id: rule.id,

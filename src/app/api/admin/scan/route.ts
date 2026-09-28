@@ -11,7 +11,11 @@ const SMSBOWER_API_KEY = process.env.SMSBOWER_API_KEY || '';
 // Hardcoded map per user instructions
 const SERVICE_MAP: Record<string, { vsim: string, smsbower: string }> = {
     'gv': { vsim: 'lvbv', smsbower: 'gf' },
-    'go': { vsim: 'api', smsbower: 'go' }
+    'go': { vsim: 'api', smsbower: 'go' },
+    'wa': { vsim: 'wa', smsbower: 'wa' },
+    'tg': { vsim: 'tg', smsbower: 'tg' },
+    'ig': { vsim: 'ig', smsbower: 'ig' },
+    'fb': { vsim: 'fb', smsbower: 'fb' }
 };
 
 export async function GET(request: Request) {
