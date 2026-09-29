@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LucideAlertTriangle, LucideTerminal, supabase } from '@/lib/supabase';
-import { LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideArrowRight } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideArrowRight } from 'lucide-react';
 
 export default function TelegramGuidePage() {
   const [telegramId, setTelegramId] = useState('');
