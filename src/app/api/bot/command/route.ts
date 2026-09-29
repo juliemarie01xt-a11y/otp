@@ -181,36 +181,38 @@ Choose your quality tier:`,
         const API_SERVICE = rule.target_service_code || rule.internal_service;
 
         try {
-          const res = await axios.get(TARGET_API_URL, {
-            params: {
-              api_key: TARGET_API_KEY,
-              action: 'getNumber',
-              service: API_SERVICE,
-              country: rule.country_id,
-              operator: rule.target_operator || 'any'
-            }
-          });
-
+          const apiParams: any = {
+            api_key: TARGET_API_KEY,
+            action: 'getNumber',
+            service: API_SERVICE,
+            country: rule.country_id
+          };
+          if (rule.target_operator) apiParams.operator = rule.target_operator;
+          
+          const res = await axios.get(TARGET_API_URL, { params: apiParams, validateStatus: (s) => s < 500 });
           const resData = res.data;
           
-          if (resData && resData.phone && resData.activationId) {
+          const actId = actId || resData.id;
+          const phone = phoneNumber || phone;
+          
+          if (resData && resData.success !== false && actId && phone) {
             const { error: balErr } = await supabaseAdmin.rpc('deduct_balance', {
               user_id: profile.id,
               amount: retailCost
             });
 
             if (balErr) {
-               await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: resData.activationId, status: 8 }});
+               await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
                await tgApi('sendMessage', { chat_id: chatId, text: '? Failed to process payment securely. Order cancelled.' });
                return NextResponse.json({ success: true });
             }
 
             await supabaseAdmin.from('activations').insert({
               user_id: profile.id,
-              vsim_activation_id: `${rule.target_api}::${resData.activationId}`,
+              vsim_activation_id: `${rule.target_api}::${actId}`,
               country: rule.country_id,
               service: rule.internal_service,
-              phone_number: resData.phone.toString(),
+              phone_number: phone.toString(),
               cost: retailCost,
               status: 'PENDING'
             });
@@ -221,7 +223,7 @@ Choose your quality tier:`,
 
 Service: ${getService(rule.internal_service).name}
 Tier: ${rule.tier === 'premium' ? '?? Premium' : '? Standard'}
-Number: <code>+${resData.phone}</code>
+Number: <code>+${phone}</code>
 Cost: $${retailCost.toFixed(2)}
 
 ? <i>Waiting for SMS code...</i>`
