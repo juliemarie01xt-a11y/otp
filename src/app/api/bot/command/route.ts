@@ -27,8 +27,8 @@ async function tgApi(method: string, payload: any) {
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('x-telegram-bot-api-secret-token');
-    const expectedToken = process.env.TELEGRAM_SECRET_TOKEN || 'swiftotp_secure_webhook_token_2026';
-    if (authHeader !== expectedToken) {
+    const expectedToken = process.env.TELEGRAM_SECRET_TOKEN;
+    if (!expectedToken || authHeader !== expectedToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
