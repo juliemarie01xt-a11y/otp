@@ -658,9 +658,7 @@ Click the button below to pay securely via Plisio.`,
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: '🤔 I didn\'t quite catch that.
-
-Open the Menu to see available commands, or type <code>/buy</code> to purchase a new number!'
+                text: `🤔 I didn't quite catch that.\n\nOpen the Menu to see available commands, or type <code>/buy</code> to purchase a new number!`
             });
         }
     }
