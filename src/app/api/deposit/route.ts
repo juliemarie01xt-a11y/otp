@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const response = await axios.get(`${PLISIO_API_URL}/invoices/new`, {
       params: {
         source_currency: 'USD',
-        source_amount: (amount * 1.005).toFixed(4), // Add our 0.5% profit cut upfront
+        source_amount: (amount * (1.015 / 1.01)).toFixed(4), // Target 1.5% total fee (accounting for Plisio's 1%)
         order_name: `Wallet Top-Up`,
         order_number: deposit.id,
         callback_url: callbackUrl,

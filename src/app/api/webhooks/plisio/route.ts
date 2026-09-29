@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
     // 6. Credit the user's wallet ATOMICALLY using SQL RPC
     //    We deduct the 0.5% profit cut we added upfront (divide by 1.005)
-    let addedAmount = Number(amountPaidStr) / 1.005;
+    let addedAmount = Number(amountPaidStr) / (1.015 / 1.01);
     
     // Round to 4 decimal places to prevent infinite fraction floating point errors
     addedAmount = Number(addedAmount.toFixed(4));
