@@ -33,6 +33,34 @@ export async function POST(request: Request) {
 
     const update = await request.json();
 
+    // Handle /start command
+    if (update.message && update.message.text && update.message.text.trim().toLowerCase().startsWith('/start')) {
+        const chatId = update.message.chat.id;
+        
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+        
+        if (profile) {
+            await tgApi('sendMessage', { 
+                chat_id: chatId, 
+                text: '✅ This Telegram account is already linked to a SwiftOTP account!
+
+If you want to unlink it, type /unlink' 
+            });
+        } else {
+            await tgApi('sendMessage', { 
+                chat_id: chatId, 
+                parse_mode: 'HTML',
+                text: `Welcome to SwiftOTP Official! 🛡️⚡
+
+Your unique Telegram ID is: <code>${chatId}</code>
+
+Please enter this ID on the website dashboard to link your account.` 
+            });
+        }
+        return NextResponse.json({ success: true });
+    }
+
+
     
     // Handle /unlink command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/unlink') {
