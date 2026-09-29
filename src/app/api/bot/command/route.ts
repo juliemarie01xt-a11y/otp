@@ -149,7 +149,7 @@ Choose your quality tier:`,
         });
       }
 
-      // STEP C: Confirm Purchase
+            // STEP C: Confirm Purchase
       else if (data.startsWith('buy_rt_')) {
         const ruleId = data.replace('buy_rt_', '');
         
@@ -192,8 +192,8 @@ Choose your quality tier:`,
           const res = await axios.get(TARGET_API_URL, { params: apiParams, validateStatus: (s) => s < 500 });
           const resData = res.data;
           
-          const actId = actId || resData.id;
-          const phone = phoneNumber || phone;
+          const actId = resData.activationId || resData.id;
+          const phone = resData.phoneNumber || resData.phone;
           
           if (resData && resData.success !== false && actId && phone) {
             const { error: balErr } = await supabaseAdmin.rpc('deduct_balance', {
@@ -219,14 +219,7 @@ Choose your quality tier:`,
 
             await tgApi('sendMessage', { 
               chat_id: chatId, parse_mode: 'HTML',
-              text: `? <b>Number Purchased!</b>
-
-Service: ${getService(rule.internal_service).name}
-Tier: ${rule.tier === 'premium' ? '?? Premium' : '? Standard'}
-Number: <code>+${phone}</code>
-Cost: $${retailCost.toFixed(2)}
-
-? <i>Waiting for SMS code...</i>`
+              text: `? <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '?? Premium' : '? Standard'}\nNumber: <code>+${phone}</code>\nCost: $${retailCost.toFixed(2)}\n\n? <i>Waiting for SMS code...</i>`
             });
           } else {
              await tgApi('sendMessage', { chat_id: chatId, text: `? Out of stock for this specific tier. Please try a different route.` });
