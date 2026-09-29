@@ -230,7 +230,7 @@ Cost: $${retailCost.toFixed(2)}
              await tgApi('sendMessage', { chat_id: chatId, text: `? Out of stock for this specific tier. Please try a different route.` });
           }
         } catch (e: any) {
-           await tgApi('sendMessage', { chat_id: chatId, text: `? Provider API Error.` });
+           await tgApi('sendMessage', { chat_id: chatId, text: `? Provider API Error: ${e.message} (Status: ${e.response?.status})` });
         }
       }
 
