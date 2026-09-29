@@ -99,6 +99,9 @@ export async function POST(request: Request) {
                 if (!rpcError && rpcBalance !== null) {
                     newBalance = rpcBalance;
                 }
+
+                // Add a Hoarder Strike!
+                await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: userId });
             }
 
             return NextResponse.json({ success: true, message: data, refundedAmount: refundAmount, newBalance });

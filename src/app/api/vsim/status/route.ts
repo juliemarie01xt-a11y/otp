@@ -64,6 +64,9 @@ export async function GET(request: Request) {
             if (updatedAct && updatedAct.length > 0) {
                 const userId = updatedAct[0].user_id;
                 
+                // Reset Hoarder Strikes because they actually got an SMS!
+                await supabaseAdmin.rpc('reset_hoarder_strikes', { p_user_id: userId });
+                
                 // Fetch user to see if they have a Telegram Bot linked
                 const { data: profile } = await supabaseAdmin.from('profiles').select('telegram_id').eq('id', userId).single();
                 
