@@ -1,7 +1,56 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Only initialize if the user has configured the Upstash keys
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
+
+// Create a new ratelimiter that allows 30 requests per 10 seconds per IP
+const ratelimit = redis
+  ? new Ratelimit({
+      redis: redis,
+      limiter: Ratelimit.slidingWindow(30, '10 s'),
+      analytics: true,
+    })
+  : null;
+
 
 export default async function proxy(request: NextRequest) {
+
+  // ----------------------------------------------------------------------
+  // UPSTASH EDGE RATE LIMITING
+  // ----------------------------------------------------------------------
+  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+  
+  if (request.nextUrl.pathname.startsWith('/api/') && ratelimit) {
+    try {
+      const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
+      
+      if (!success) {
+        return NextResponse.json(
+          { error: 'Edge Defense: Too many requests. You have been temporarily blocked for spamming.' },
+          { 
+            status: 429, 
+            headers: {
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': reset.toString()
+            }
+          }
+        );
+      }
+    } catch (e) {
+      console.error('Upstash Edge Limiter Error:', e);
+    }
+  }
+  // ----------------------------------------------------------------------
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
