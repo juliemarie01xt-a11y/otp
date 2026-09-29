@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
                     successMessage += `📧 <b>Please check your email inbox (and Spam/Junk folder)</b> to verify your email address.\n\n`;
                     successMessage += `⚠️ <b>IMPORTANT:</b> For your security, please completely delete your previous message containing your password from this chat, and remember it!\n\n`;
-                    successMessage += `<i>Type /buy to get started or /deposit to add funds.</i>`;
+                    successMessage += `<i>Type /buy to get started, /deposit to add funds, or visit <a href="https://swiftotp.store">swiftotp.store</a> to manage your account on the web.</i>`;
 
                     await tgApi('sendMessage', { 
                         chat_id: chatId, 
