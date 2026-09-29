@@ -98,7 +98,7 @@ export async function POST(request: Request) {
         let row = [];
         for (const ctyCode of activeCountries) {
           const cty = getCountry(ctyCode);
-          row.push({ text: `${cty.short}`, callback_data: `buy_cty_${svcCode}_${ctyCode}` });
+          row.push({ text: `${cty.flag} ${cty.name}`, callback_data: `buy_cty_${svcCode}_${ctyCode}` });
           if (row.length === 3) {
             inline_keyboard.push(row);
             row = [];
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
 
         await tgApi('editMessageText', {
           chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-          text: `?? <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).short}):</b>\n\nChoose your quality tier:`,
+          text: `?? <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).flag} ${getCountry(ctyCode).name}):</b>\n\nChoose your quality tier:`,
           reply_markup: { inline_keyboard }
         });
       }
