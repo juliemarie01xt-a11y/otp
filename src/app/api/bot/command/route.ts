@@ -10,6 +10,11 @@ const VSIM_API_KEY = process.env.VSIM_API_KEY;
 const SMSBOWER_API_URL = 'https://smsbower.page/stubs/handler_api.php';
 const SMSBOWER_API_KEY = process.env.SMSBOWER_API_KEY;
 
+// Helper to format money exactly like the frontend
+const formatMoney = (amount: number | string) => {
+  return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+};
+
 // Helper to send/edit messages
 async function tgApi(method: string, payload: any) {
   try {
@@ -134,9 +139,9 @@ export async function POST(request: Request) {
           if (ctyCode === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
              if (wholesaleCost < 0.188) wholesaleCost = 0.188;
           }
-          const retailCost = (wholesaleCost + PROFIT_MARGIN).toFixed(3);
+          const retailCost = wholesaleCost + PROFIT_MARGIN;
           const tierLabel = rule.tier === 'premium' ? '?? High-Priority' : '? Standard';
-          const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${retailCost}`;
+          const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${formatMoney(retailCost)}`;
           return [{ text: buttonText, callback_data: `buy_rt_${rule.id}` }];
         };
 
@@ -214,7 +219,7 @@ export async function POST(request: Request) {
             // 4. Final Balance sanity check based on LIVE pricing
             if (retailCost > userBalance) {
                await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
-               await tgApi('sendMessage', { chat_id: chatId, text: `? Insufficient balance for this specific number route. You need $${retailCost.toFixed(3)}` });
+               await tgApi('sendMessage', { chat_id: chatId, text: `? Insufficient balance for this specific number route. You need $${formatMoney(retailCost)}` });
                return NextResponse.json({ success: true });
             }
 
@@ -249,7 +254,7 @@ export async function POST(request: Request) {
 
             await tgApi('sendMessage', { 
               chat_id: chatId, parse_mode: 'HTML',
-              text: `? <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '?? Premium' : '? Standard'}\nNumber: <code>+${phone}</code>\nCost: $${retailCost.toFixed(2)}\n\n? <i>Waiting for SMS code...</i>`
+              text: `? <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '?? High-Priority' : '? Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n? <i>Waiting for SMS code...</i>`
             });
           } else {
              await tgApi('sendMessage', { chat_id: chatId, text: `? Out of stock for this specific tier. Please try a different route.` });
