@@ -357,7 +357,7 @@ export async function POST(request: Request) {
               text: `✅ <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n⏳ <i>Waiting for SMS code...</i>`,
               reply_markup: {
                   inline_keyboard: [[
-                      { text: '🔄 Check OTP', callback_data: `check_otp_${rule.target_api}::${actId}` }
+                      { text: '🔄 Check OTP', callback_data: `check_otp_${rule.target_api}::${actId}` }, { text: '❌ Cancel', callback_data: `cancel_act_${rule.target_api}::${actId}` }
                   ]]
               }
             });
