@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -26,9 +26,54 @@ export default function TelegramGuidePage() {
     loadProfile();
   }, [router]);
 
-  const handleLinkTelegram = async (e: React.FormEvent) => {
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendTimer]);
+
+  // Step 1: Send OTP to user's email
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!telegramId.trim()) return;
+    setTgLoading(true);
+    setTgMsg({ type: '', text: '' });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not logged in");
+
+      const res = await fetch('/api/user/send-link-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMaskedEmail(data.email);
+        setOtpStep(true);
+        setResendTimer(60);
+        setTgMsg({ type: 'success', text: `Verification code sent to ${data.email}` });
+      } else {
+        setTgMsg({ type: 'error', text: data.error || 'Failed to send verification code' });
+      }
+    } catch (err: any) {
+      setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
+    }
+    setTgLoading(false);
+  };
+
+  // Step 2: Verify OTP and link Telegram
+  const handleLinkTelegram = async () => {
+    if (!otpCode.trim()) return;
     setTgLoading(true);
     setTgMsg({ type: '', text: '' });
 
@@ -42,11 +87,13 @@ export default function TelegramGuidePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ telegramId })
+        body: JSON.stringify({ telegramId, otp_code: otpCode })
       });
       const data = await res.json();
       if (data.success) {
         setProfile({ ...profile, telegram_id: telegramId });
+        setOtpStep(false);
+        setOtpCode('');
         setTgMsg({ type: 'success', text: 'Successfully connected!' });
       } else {
         setTgMsg({ type: 'error', text: data.error || 'Failed to link account' });
@@ -174,27 +221,70 @@ export default function TelegramGuidePage() {
                 </div>
               </div>
               <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-xl">
-                <form onSubmit={handleLinkTelegram} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-zinc-700 mb-2">Paste Your Telegram ID</label>
-                    <input
-                      type="text"
-                      value={telegramId}
-                      onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ''))}
-                      maxLength={12}
-                      placeholder="e.g., 8252822439"
-                      className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium tracking-wide shadow-sm"
-                    />
+                {!otpStep ? (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 mb-2">Paste Your Telegram ID</label>
+                      <input
+                        type="text"
+                        value={telegramId}
+                        onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ''))}
+                        maxLength={12}
+                        placeholder="e.g., 8252822439"
+                        className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium tracking-wide shadow-sm"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={tgLoading || !telegramId.trim()}
+                      className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideSmartphone className="w-4 h-4" />}
+                      {tgLoading ? 'Sending Code...' : 'Send Verification Code'}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
+                      <p className="text-sm text-blue-800 font-medium">A 6-digit code was sent to <strong>{maskedEmail}</strong></p>
+                      <p className="text-xs text-blue-600 mt-1">Check your inbox (and spam folder)</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 mb-2">Enter Verification Code</label>
+                      <input
+                        type="text"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        maxLength={6}
+                        placeholder="Enter 6-digit code"
+                        className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold tracking-[0.3em] text-center text-lg shadow-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={handleLinkTelegram}
+                      disabled={tgLoading || otpCode.length !== 6}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideCheckCircle2 className="w-4 h-4" />}
+                      {tgLoading ? 'Verifying...' : 'Verify & Connect'}
+                    </button>
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        onClick={() => { setOtpStep(false); setOtpCode(''); setTgMsg({ type: '', text: '' }); }}
+                        className="text-xs text-zinc-500 hover:text-zinc-700 font-medium transition-colors"
+                      >
+                        ← Change Telegram ID
+                      </button>
+                      <button
+                        onClick={handleSendOtp as any}
+                        disabled={resendTimer > 0}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-bold disabled:text-zinc-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Code'}
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={tgLoading}
-                    className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideCheckCircle2 className="w-4 h-4" />}
-                    {tgLoading ? 'Connecting...' : 'Securely Connect Account'}
-                  </button>
-                </form>
+                )}
                 <div className="mt-5 flex items-start gap-2 p-3 bg-red-50/50 border border-red-100 rounded-lg">
                   <LucideAlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-red-700/90 leading-relaxed font-medium">
