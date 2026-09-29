@@ -62,13 +62,12 @@ export async function POST(request: Request) {
       }
 
       // Find the cheapest active route for this combination
-      const { data: routes } = await supabaseAdmin
+      const { data: routes, error: routeErr } = await supabaseAdmin
         .from('routing_rules')
         .select('*')
-        .eq('service', serviceCode)
-        .eq('country', countryCode)
-        .eq('is_active', true)
-        .order('priority', { ascending: true });
+        .eq('internal_service', serviceCode)
+        .eq('country_id', countryCode)
+        .order('cached_wholesale_cost', { ascending: true });
 
       if (!routes || routes.length === 0) {
         return NextResponse.json({ text: '? No active routes found for this service and country. They might be out of stock.' });
@@ -87,7 +86,7 @@ export async function POST(request: Request) {
       for (const rule of routes) {
         const TARGET_API_URL = rule.target_api === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;
         const TARGET_API_KEY = rule.target_api === 'smsbower' ? SMSBOWER_API_KEY : VSIM_API_KEY;
-        const API_SERVICE = rule.target_api === 'smsbower' && serviceCode === 'go' ? 'gmail' : serviceCode;
+        const API_SERVICE = rule.target_service_code || serviceCode;
 
         try {
           const res = await axios.get(TARGET_API_URL, {
