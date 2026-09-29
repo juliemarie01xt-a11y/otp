@@ -58,11 +58,7 @@ If you want to unlink it and connect a different account, type /unlink`
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: `Welcome to SwiftOTP Official! 🛡️⚡
-
-Your unique Telegram ID is: <code>${chatId}</code>
-
-Please enter this ID on the website dashboard to link your account.` 
+                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://otp-three-liard.vercel.app/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
             });
         }
         return NextResponse.json({ success: true });
@@ -656,9 +652,7 @@ Click the button below to pay securely via Plisio.`,
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: '👋 <b>Welcome to SwiftOTP!</b>
-
-It looks like your account is not connected yet. Please type <code>/start</code> to generate your unique Telegram ID and link it on our website to begin using the bot!'
+                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://otp-three-liard.vercel.app/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
             });
         } else {
             await tgApi('sendMessage', { 
