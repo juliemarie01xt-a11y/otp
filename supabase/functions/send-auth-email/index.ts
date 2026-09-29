@@ -4,14 +4,6 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 serve(async (req: Request) => {
   try {
-    // 1. Verify the request is coming from Supabase Auth via a custom Webhook Secret
-    // (Optional but highly recommended: verify a secret header so hackers can't spam your email API)
-    const AUTH_WEBHOOK_SECRET = Deno.env.get("AUTH_WEBHOOK_SECRET");
-    if (AUTH_WEBHOOK_SECRET && req.headers.get("x-auth-webhook-secret") !== AUTH_WEBHOOK_SECRET) {
-       return new Response("Unauthorized", { status: 401 });
-    }
-
-    // 2. Parse the payload from Supabase
     const payload = await req.json();
     const { user, email_data } = payload;
     
@@ -20,15 +12,17 @@ serve(async (req: Request) => {
     }
 
     const email = user.email;
-    const actionType = email_data.email_action_type; // 'signup', 'recovery', 'magiclink'
+    const actionType = email_data.email_action_type; 
     const tokenHash = email_data.token_hash;
     const siteUrl = email_data.site_url || 'https://swiftotp.store';
     
-    // 3. Construct the secure Supabase Verification URL
-    // We send them to Supabase's native verify endpoint which automatically handles the token and redirects
-    const verifyUrl = `${siteUrl}/auth/v1/verify?token=${tokenHash}&type=${actionType}&redirect_to=${siteUrl}/dashboard`;
+    // Fix: We must construct the Verify URL using the Supabase URL, and we MUST include the ANON KEY
+    // otherwise the Supabase API Gateway blocks the browser redirect with "No API key found in request"
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${tokenHash}&type=${actionType}&redirect_to=${siteUrl}/dashboard&apikey=${anonKey}`;
 
-    // 4. Build the HTML Template based on the action
     let subject = "Welcome to SwiftOTP";
     let title = "Verify your email";
     let message = "Welcome to SwiftOTP! To complete your registration and start buying secure phone numbers, please verify your email address by clicking the button below.";
@@ -41,7 +35,6 @@ serve(async (req: Request) => {
         buttonText = "Reset Password";
     }
 
-    // A beautiful, sleek SaaS email template
     const html = `
     <!DOCTYPE html>
     <html>
@@ -81,7 +74,6 @@ serve(async (req: Request) => {
     </html>
     `;
 
-    // 5. Send the email using Resend
     if (!RESEND_API_KEY) {
         throw new Error("Missing RESEND_API_KEY environment variable");
     }
@@ -93,7 +85,7 @@ serve(async (req: Request) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'SwiftOTP Security <noreply@swiftotp.store>', // Make sure this domain is verified in Resend!
+        from: 'SwiftOTP Security <noreply@swiftotp.store>',
         to: email,
         subject: subject,
         html: html
