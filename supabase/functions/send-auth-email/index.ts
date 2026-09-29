@@ -14,7 +14,7 @@ serve(async (req: Request) => {
     const email = user.email;
     const actionType = email_data.email_action_type; 
     const tokenHash = email_data.token_hash;
-    const siteUrl = email_data.site_url || 'https://swiftotp.store';
+    const siteUrl = 'https://swiftotp.store'; // Hardcoded to prevent incorrect Supabase Dashboard configurations
     
     // Redirect securely to our Next.js backend to perform verification
     // This avoids Kong API Gateway issues with missing API keys in the browser
