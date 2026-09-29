@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LucideLock, LucideCreditCard, LucideTrendingUp, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideWallet, LucideKey, LucideSmartphone, LucideBot } from 'lucide-react';
+import { LucideLock, LucideCreditCard, LucideTrendingUp, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideWallet, LucideKey, LucideBot } from 'lucide-react';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -13,10 +13,6 @@ export default function SettingsPage() {
   const [password, setPassword] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdMsg, setPwdMsg] = useState({ type: '', text: '' });
-
-  const [telegramId, setTelegramId] = useState('');
-  const [tgLoading, setTgLoading] = useState(false);
-  const [tgMsg, setTgMsg] = useState({ type: '', text: '' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +26,6 @@ export default function SettingsPage() {
         .eq('id', session.user.id)
         .single();
       setProfile(prof);
-      if (prof?.telegram_id) setTelegramId(prof.telegram_id);
 
       // 2. Get Deposits
       const { data: deps } = await supabase
@@ -68,77 +63,23 @@ export default function SettingsPage() {
     fetchData();
   }, []);
 
-  const handleLinkTelegram = async (e: any) => {
-    e.preventDefault();
-    setTgLoading(true);
-    setTgMsg({ type: '', text: '' });
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not logged in");
-      const res = await fetch(`/api/user/link-telegram?t=${Date.now()}`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ telegramId: String(telegramId).trim() })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        setTgMsg({ type: 'success', text: 'Telegram account linked successfully!' });
-          setProfile({ ...profile, telegram_id: telegramId });
-      } else {
-        setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
-      }
-    } catch (err: any) {
-      setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
-    }
-    setTgLoading(false);
-  };
-
-  const handleUnlinkTelegram = async () => {
-    if (!confirm('Are you sure you want to disconnect your Telegram account?')) return;
-    setTgLoading(true);
-    setTgMsg({ type: '', text: '' });
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not logged in");
-      const res = await fetch(`/api/user/unlink-telegram?t=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setProfile({ ...profile, telegram_id: null });
-        setTelegramId('');
-        setTgMsg({ type: 'success', text: 'Telegram account disconnected.' });
-      } else {
-        setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
-      }
-    } catch (err: any) {
-      setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
-    }
-    setTgLoading(false);
-  };
-
   const handleUpdatePassword = async (e: any) => {
     e.preventDefault();
     if (password.length < 6) {
       setPwdMsg({ type: 'error', text: 'Password must be at least 6 characters long.' });
       return;
     }
+
     setPwdLoading(true);
     setPwdMsg({ type: '', text: '' });
-
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setPwdMsg({ type: 'error', text: error.message });
-    } else {
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
       setPwdMsg({ type: 'success', text: 'Password updated successfully!' });
       setPassword('');
+    } catch (err: any) {
+      setPwdMsg({ type: 'error', text: err.message });
     }
     setPwdLoading(false);
   };
@@ -269,7 +210,7 @@ export default function SettingsPage() {
             </div>
           </div>
           
-                              {/* Telegram Bot Banner */}
+          {/* Telegram Bot Banner */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-sm overflow-hidden text-white">
             <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex-1 text-center sm:text-left">
@@ -286,6 +227,22 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          <div className="bg-zinc-50 rounded-xl p-5 border border-zinc-200">
+            <h3 className="font-bold text-zinc-900 text-sm mb-1">Account Info</h3>
+            <p className="text-zinc-500 text-xs mb-3">Your profile information.</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Email</span>
+                <span className="font-medium text-zinc-900">{profile?.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Joined</span>
+                <span className="font-medium text-zinc-900">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
