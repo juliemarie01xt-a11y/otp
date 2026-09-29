@@ -33,6 +33,22 @@ export async function POST(request: Request) {
 
     const update = await request.json();
 
+    
+    // Handle /unlink command
+    if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/unlink') {
+      const chatId = update.message.chat.id;
+
+      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+      if (!profile) {
+        await tgApi('sendMessage', { chat_id: chatId, text: '? Your account is not currently linked.' });
+        return NextResponse.json({ success: true });
+      }
+
+      await supabaseAdmin.from('profiles').update({ telegram_id: null }).eq('id', profile.id);
+      await tgApi('sendMessage', { chat_id: chatId, text: '? Your account has been securely disconnected from the Telegram Bot.' });
+      return NextResponse.json({ success: true });
+    }
+
     // 1. Handle regular /buy command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/buy') {
       const chatId = update.message.chat.id;

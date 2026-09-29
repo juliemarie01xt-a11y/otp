@@ -97,6 +97,31 @@ export default function SettingsPage() {
     setTgLoading(false);
   };
 
+  const handleUnlinkTelegram = async () => {
+    if (!confirm('Are you sure you want to disconnect your Telegram account?')) return;
+    setTgLoading(true);
+    setTgMsg({ type: '', text: '' });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not logged in");
+      const res = await fetch(`/api/user/unlink-telegram?t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProfile({ ...profile, telegram_id: null });
+        setTelegramId('');
+        setTgMsg({ type: 'success', text: 'Telegram account disconnected.' });
+      } else {
+        setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
+      }
+    } catch (err: any) {
+      setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
+    }
+    setTgLoading(false);
+  };
+
   const handleUpdatePassword = async (e: any) => {
     e.preventDefault();
     if (password.length < 6) {
