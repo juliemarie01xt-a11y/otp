@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // STEP B: Picked a Country -> Show exact routes/tiers
+            // STEP B: Picked a Country -> Show exact routes/tiers
       else if (data.startsWith('buy_cty_')) {
         const parts = data.replace('buy_cty_', '').split('_');
         const svcCode = parts[0];
@@ -125,31 +125,34 @@ export async function POST(request: Request) {
         const inline_keyboard = [];
         const PROFIT_MARGIN = 0.012;
 
-        (routes || []).forEach(rule => {
+        const premiumRules = (routes || []).filter(r => r.tier === 'premium');
+        const standardRules = (routes || []).filter(r => r.tier === 'standard');
+        const getLetter = (index: number) => String.fromCharCode(65 + index);
+
+        const processRule = (rule: any, index: number) => {
           let wholesaleCost = Number(rule.cached_wholesale_cost);
-          if (rule.target_api === 'vsim' && ctyCode === '12' && svcCode === 'go') {
+          if (ctyCode === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
              if (wholesaleCost < 0.188) wholesaleCost = 0.188;
           }
           const retailCost = (wholesaleCost + PROFIT_MARGIN).toFixed(3);
-          const tierLabel = rule.tier === 'premium' ? '?? Premium' : '? Standard';
-          const buttonText = `${tierLabel} - $${retailCost}`;
-          
-          // buy_rt_<rule_id> (UUID is 36 chars, fits in 64 bytes)
-          inline_keyboard.push([{ text: buttonText, callback_data: `buy_rt_${rule.id}` }]);
-        });
+          const tierLabel = rule.tier === 'premium' ? '?? High-Priority' : '? Standard';
+          const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${retailCost}`;
+          return [{ text: buttonText, callback_data: `buy_rt_${rule.id}` }];
+        };
+
+        premiumRules.forEach((rule, i) => inline_keyboard.push(processRule(rule, i)));
+        standardRules.forEach((rule, i) => inline_keyboard.push(processRule(rule, i)));
 
         inline_keyboard.push([{ text: '?? Back to Countries', callback_data: `buy_svc_${svcCode}` }]);
 
         await tgApi('editMessageText', {
           chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-          text: `?? <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).short}):</b>
-
-Choose your quality tier:`,
+          text: `?? <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).short}):</b>\n\nChoose your quality tier:`,
           reply_markup: { inline_keyboard }
         });
       }
 
-                  // STEP C: Confirm Purchase
+      // STEP C: Confirm Purchase
       else if (data.startsWith('buy_rt_')) {
         const ruleId = data.replace('buy_rt_', '');
         
