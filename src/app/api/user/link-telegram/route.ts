@@ -29,7 +29,7 @@ export async function POST(request: Request) {
          await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
            chat_id: telegramId,
            parse_mode: 'HTML',
-           text: `? <b>Connection Successful!</b>\n\nYour SwiftOTP account (<code>${email}</code>) is now securely linked to this Telegram chat.\n\nYou can now type /buy to instantly purchase numbers!`
+           text: `?? <b>Account Successfully Linked!</b>\n\nWelcome aboard! Your <b>SwiftOTP</b> account (<code>${email}</code>) is now securely connected.\n\nYou can now manage your numbers directly from this chat:\n?? <b>/buy</b> - Purchase a new number\n?? <b>/balance</b> - Check your wallet balance\n? <b>/cancel</b> - Cancel an active number\n\n<i>Start by typing /buy to get your first number!</i>`
          });
       }
     } catch (e) {
