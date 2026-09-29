@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut } from 'lucide-react';
+import { LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut, LucideUserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TelegramGuidePage() {
@@ -130,6 +130,7 @@ export default function TelegramGuidePage() {
   };
 
   const COMMANDS = [
+    { cmd: '/create', desc: 'Create a new SwiftOTP account', icon: LucideUserPlus },
     { cmd: '/buy', desc: 'Purchase a new verification number', icon: LucideShoppingCart },
     { cmd: '/deposit', desc: 'Top-up your wallet using Crypto', icon: LucideWallet },
     { cmd: '/active', desc: 'View your active numbers & OTPs', icon: LucideActivitySquare },
