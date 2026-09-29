@@ -213,6 +213,64 @@ export async function POST(request: Request) {
         await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '⏳ Checking for SMS...', show_alert: false });
       }
       
+
+      // Handle Deposit Action
+      else if (data.startsWith('deposit_')) {
+         const amountStr = data.replace('deposit_', '');
+         const amount = Number(amountStr);
+         const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+         if (!profile) return NextResponse.json({ success: true });
+
+         await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '⏳ Generating secure crypto invoice...' });
+
+         const { data: deposit, error: dbError } = await supabaseAdmin
+          .from('deposits')
+          .insert({ user_id: profile.id, amount: amount, status: 'PENDING' })
+          .select('id').single();
+
+         if (!deposit) {
+            await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Failed to initialize deposit.' });
+            return NextResponse.json({ success: true });
+         }
+
+         const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
+         const PLISIO_API_URL = 'https://api.plisio.net/api/v1';
+         
+         const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+         const protocol = host.includes('localhost') ? 'http' : 'https';
+         const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
+         
+         const multiplier = 1.015 / 1.01; 
+
+         try {
+             const response = await axios.get(`${PLISIO_API_URL}/invoices/new`, {
+               params: {
+                 source_currency: 'USD',
+                 source_amount: (amount * multiplier).toFixed(4), 
+                 order_name: 'Wallet Top-Up',
+                 order_number: deposit.id,
+                 callback_url: callbackUrl,
+                 api_key: PLISIO_SECRET_KEY
+               }
+             });
+
+             if (response.data && response.data.status === 'success') {
+                const invoice_url = response.data.data.invoice_url;
+                await tgApi('editMessageText', { 
+                  chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
+                  text: `💳 <b>Crypto Deposit</b>\n\nAmount: <b>${amount.toFixed(2)}</b>\nTotal with 1.5% network fee: <b>${(amount * 1.015).toFixed(2)}</b>\n\nClick the button below to pay securely via Plisio.`,
+                  reply_markup: {
+                      inline_keyboard: [[ { text: `🔗 Pay ${(amount * 1.015).toFixed(2)} via Plisio`, url: invoice_url } ]]
+                  }
+                });
+             } else {
+                await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Failed to generate crypto invoice from gateway.' });
+             }
+         } catch(e: any) {
+             await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: `❌ Invoice Error: ${e.message}` });
+         }
+      }
+
       // Handle Cancel Action Button
       else if (data.startsWith('cancel_act_')) {
         const fullActId = data.replace('cancel_act_', '');
