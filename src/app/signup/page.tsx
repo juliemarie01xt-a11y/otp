@@ -25,7 +25,7 @@ export default function SignupPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      setSuccess('Account created! Please check your email for the confirmation link, or log in if email confirmation is disabled.');
+      setSuccess('Account created! Please check your inbox (and Spam/Junk folder) for the verification link.');
       setLoading(false);
       // Wait briefly then push to login
       setTimeout(() => {

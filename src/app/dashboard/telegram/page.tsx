@@ -247,7 +247,12 @@ export default function TelegramGuidePage() {
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
                       <p className="text-sm text-blue-800 font-medium">A 6-digit code was sent to <strong>{maskedEmail}</strong></p>
-                      <p className="text-xs text-blue-600 mt-1">Check your inbox (and spam folder)</p>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                      <LucideAlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                        If you don't receive the code within 1 minute, <strong>please check your Spam or Junk folder</strong>.
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-zinc-700 mb-2">Enter Verification Code</label>
