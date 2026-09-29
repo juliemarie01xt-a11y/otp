@@ -34,6 +34,103 @@ export async function POST(request: Request) {
 
     const update = await request.json();
 
+    // 1. CLEAR STATE ON NEW COMMANDS
+    if (update.message && update.message.text && update.message.text.startsWith('/')) {
+        const chatId = update.message.chat.id.toString();
+        // Ignore errors if table doesn't exist yet
+        await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId).catch(() => {});
+    }
+
+    // 2. STATE MACHINE FOR /CREATE ACCOUNT FLOW
+    if (update.message && update.message.text && !update.message.text.startsWith('/')) {
+        const chatId = update.message.chat.id.toString();
+        
+        try {
+            const { data: session } = await supabaseAdmin.from('bot_sessions').select('*').eq('telegram_id', chatId).single();
+            
+            if (session) {
+                const text = update.message.text.trim();
+                
+                if (session.step === 'AWAITING_EMAIL') {
+                    // Very basic email regex
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+                        await tgApi('sendMessage', { chat_id: chatId, text: '❌ That doesn\'t look like a valid email. Please try again or type /cancel to abort.' });
+                        return NextResponse.json({ success: true });
+                    }
+                    
+                    await supabaseAdmin.from('bot_sessions').update({ step: 'AWAITING_PASSWORD', temp_email: text }).eq('telegram_id', chatId);
+                    await tgApi('sendMessage', { chat_id: chatId, text: `✅ Got it: ${text}\n\nNow, please send a strong password (minimum 6 characters).` });
+                    return NextResponse.json({ success: true });
+                }
+                
+                if (session.step === 'AWAITING_PASSWORD') {
+                    if (text.length < 6) {
+                        await tgApi('sendMessage', { chat_id: chatId, text: '❌ Password must be at least 6 characters long. Please try again or type /cancel to abort.' });
+                        return NextResponse.json({ success: true });
+                    }
+
+                    await tgApi('sendMessage', { chat_id: chatId, text: '⏳ Creating your account securely...' });
+
+                    // Use signUp so the Resend email hook is automatically triggered!
+                    const { data, error } = await supabaseAdmin.auth.signUp({
+                      email: session.temp_email,
+                      password: text
+                    });
+
+                    if (error) {
+                        await tgApi('sendMessage', { chat_id: chatId, text: `❌ Failed to create account: ${error.message}\n\nPlease type /create to try again.` });
+                        await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
+                        return NextResponse.json({ success: true });
+                    }
+
+                    // Clean up session
+                    await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
+                    
+                    // Link the telegram ID to the new profile. Wait a moment to ensure the database trigger creates the profile first.
+                    setTimeout(async () => {
+                        if (data?.user?.id) {
+                            await supabaseAdmin.from('profiles').update({ telegram_id: chatId }).eq('id', data.user.id);
+                        }
+                    }, 1500);
+
+                    await tgApi('sendMessage', { 
+                        chat_id: chatId, 
+                        parse_mode: 'HTML',
+                        text: `🎉 <b>Account created successfully!</b>\n\nYour account (<code>${session.temp_email}</code>) has been securely linked to this Telegram bot.\n\n📧 <b>Please check your email inbox (and Spam/Junk folder)</b> to verify your email address.\n\n⚠️ <b>IMPORTANT:</b> For your security, please completely delete your previous message containing your password from this chat, and remember it!\n\n<i>Type /buy to get started or /deposit to add funds.</i>` 
+                    });
+                    return NextResponse.json({ success: true });
+                }
+            }
+        } catch (err) {
+            // Table might not exist yet, just ignore
+        }
+    }
+
+    // Handle /create command
+    if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/create') {
+        const chatId = update.message.chat.id.toString();
+        
+        // Check if already linked
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
+        if (profile) {
+            await tgApi('sendMessage', { chat_id: chatId, text: '❌ This Telegram account is already linked to a SwiftOTP account! Type /status to check.' });
+            return NextResponse.json({ success: true });
+        }
+
+        // Start flow
+        try {
+            await supabaseAdmin.from('bot_sessions').upsert({ telegram_id: chatId, step: 'AWAITING_EMAIL' });
+            await tgApi('sendMessage', { 
+                chat_id: chatId, 
+                parse_mode: 'HTML',
+                text: `🚀 <b>Let's create your SwiftOTP account!</b>\n\nPlease send me your <b>Email Address</b>.` 
+            });
+        } catch (err) {
+            await tgApi('sendMessage', { chat_id: chatId, text: '❌ System error starting account creation. Please ensure the bot_sessions table is created.' });
+        }
+        return NextResponse.json({ success: true });
+    }
+
     // Handle /start command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase().startsWith('/start')) {
         const chatId = update.message.chat.id;
