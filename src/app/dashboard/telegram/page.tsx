@@ -102,7 +102,7 @@ export default function TelegramGuidePage() {
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold z-10 ring-4 ring-white shrink-0">2</div>
                 <div>
                   <h3 className="font-bold text-zinc-900">Get Your ID</h3>
-                  <p className="text-sm text-zinc-500 mt-1">Send the command <code>/start</code> to the bot. It will reply with your unique 10-digit Telegram ID.</p>
+                  <p className="text-sm text-zinc-500 mt-1">Send the command <b>/start</b> to the bot. It will reply with your unique 10-digit Telegram ID.</p>
                 </div>
               </div>
 
