@@ -194,7 +194,11 @@ If you want to unlink it and connect a different account, type /unlink`
         const { data: profile } = await supabaseAdmin.from('profiles').select('id, balance').eq('telegram_id', chatId.toString()).single();
         
         if (!profile) {
-            await tgApi('sendMessage', { chat_id: chatId, text: '❌ Your account is not linked. Please link it on the website first to view your status.' });
+            await tgApi('sendMessage', { 
+              chat_id: chatId, 
+              text: '❌ <b>Account Not Linked</b>\n\nTo use this command, you need to connect your Telegram account.\n\n<b>Choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account', 
+              parse_mode: 'HTML' 
+            });
             return NextResponse.json({ success: true });
         }
 
@@ -229,7 +233,11 @@ If you want to unlink it and connect a different account, type /unlink`
         const chatId = update.message.chat.id;
         const { data: profile } = await supabaseAdmin.from('profiles').select('balance').eq('telegram_id', chatId.toString()).single();
         if (!profile) {
-            await tgApi('sendMessage', { chat_id: chatId, text: '❌ Your account is not linked. Please link it on the website first.' });
+            await tgApi('sendMessage', { 
+              chat_id: chatId, 
+              text: '❌ <b>Account Not Linked</b>\n\nTo use this command, you need to connect your Telegram account.\n\n<b>Choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account', 
+              parse_mode: 'HTML' 
+            });
         } else {
             await tgApi('sendMessage', { chat_id: chatId, text: `💰 <b>Wallet Balance:</b>
 $${Number(profile.balance).toFixed(2)}`, parse_mode: 'HTML' });
@@ -363,7 +371,11 @@ Click the button below to pay securely via Plisio.`,
       // Check if user is linked
       const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
       if (!profile) {
-        await tgApi('sendMessage', { chat_id: chatId, text: '? Your account is not linked. Please link it on the website first.', parse_mode: 'HTML' });
+        await tgApi('sendMessage', { 
+          chat_id: chatId, 
+          text: '❌ <b>Account Not Linked</b>\n\nTo use this command, you need to connect your Telegram account.\n\n<b>Choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account', 
+          parse_mode: 'HTML' 
+        });
         return NextResponse.json({ success: true });
       }
 
