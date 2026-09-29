@@ -149,7 +149,7 @@ Choose your quality tier:`,
         });
       }
 
-            // STEP C: Confirm Purchase
+                  // STEP C: Confirm Purchase
       else if (data.startsWith('buy_rt_')) {
         const ruleId = data.replace('buy_rt_', '');
         
@@ -165,26 +165,21 @@ Choose your quality tier:`,
         }
 
         const PROFIT_MARGIN = 0.012;
-        let wholesaleCost = Number(rule.cached_wholesale_cost);
-        if (rule.target_api === 'vsim' && rule.country_id === '12' && rule.internal_service === 'go') {
-            if (wholesaleCost < 0.188) wholesaleCost = 0.188;
-        }
-        const retailCost = Number((wholesaleCost + PROFIT_MARGIN).toFixed(3));
+        const userBalance = Number(profile.balance);
 
-        if (Number(profile.balance) < retailCost) {
-           await tgApi('sendMessage', { chat_id: chatId, text: `? Insufficient balance. You need $${retailCost.toFixed(2)}` });
+        if (userBalance <= PROFIT_MARGIN) {
+           await tgApi('sendMessage', { chat_id: chatId, text: `? Your wallet balance is insufficient.` });
            return NextResponse.json({ success: true });
         }
 
         const TARGET_API_URL = rule.target_api === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;
         const TARGET_API_KEY = rule.target_api === 'smsbower' ? SMSBOWER_API_KEY : VSIM_API_KEY;
-        const API_SERVICE = rule.target_service_code || rule.internal_service;
 
         try {
           const apiParams: any = {
             api_key: TARGET_API_KEY,
             action: 'getNumberV2',
-            service: API_SERVICE,
+            service: rule.target_service_code || rule.internal_service,
             country: rule.country_id
           };
           if (rule.target_operator) apiParams.operator = rule.target_operator;
@@ -193,10 +188,41 @@ Choose your quality tier:`,
           const res = await axios.get(TARGET_API_URL, { params: apiParams, validateStatus: (s) => s < 500 });
           const resData = res.data;
           
-          const actId = resData.activationId || resData.id;
-          const phone = resData.phoneNumber || resData.phone;
-          
-          if (resData && resData.success !== false && actId && phone) {
+          // 1. EXACT match with frontend success condition
+          if (resData && resData.success !== false && (resData.activationId || resData.success === true)) {
+            
+            // 2. LIVE Pricing!
+            const wholesaleCost = Number(resData.activationCost);
+            const actId = resData.activationId || resData.id;
+            
+            if (isNaN(wholesaleCost) || wholesaleCost <= 0) {
+              await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
+              await tgApi('sendMessage', { chat_id: chatId, text: '? Provider failed to return a price. Order cancelled.' });
+              return NextResponse.json({ success: true });
+            }
+
+            let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
+            
+            // 3. EXACT match with GV Floor check
+            if (rule.country_id === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
+               if (retailCost < 0.20) retailCost = 0.20;
+            }
+
+            // 4. Final Balance sanity check based on LIVE pricing
+            if (retailCost > userBalance) {
+               await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
+               await tgApi('sendMessage', { chat_id: chatId, text: `? Insufficient balance for this specific number route. You need $${retailCost.toFixed(3)}` });
+               return NextResponse.json({ success: true });
+            }
+
+            const phone = resData.phoneNumber || resData.phone;
+            
+            if (!actId || !phone) {
+               await tgApi('sendMessage', { chat_id: chatId, text: '? Provider returned invalid data. Cancelled.' });
+               return NextResponse.json({ success: true });
+            }
+
+            // 5. ATOMIC SQL Deduct
             const { error: balErr } = await supabaseAdmin.rpc('deduct_balance', {
               p_user_id: profile.id,
               p_amount: retailCost
@@ -204,7 +230,7 @@ Choose your quality tier:`,
 
             if (balErr) {
                await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
-               await tgApi('sendMessage', { chat_id: chatId, text: '? Failed to process payment securely. Order cancelled.' });
+               await tgApi('sendMessage', { chat_id: chatId, text: '? Insufficient balance (concurrency check). Order cancelled.' });
                return NextResponse.json({ success: true });
             }
 
