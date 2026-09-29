@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideBot, LucideMessageSquare, LucideArrowRight } from 'lucide-react';
