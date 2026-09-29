@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
       // Fetch all unique internal_services that have active routes
       const { data: routes } = await supabaseAdmin.from('routing_rules').select('internal_service');
-      const activeServices = Array.from(new Set((routes || []).map(r => r.internal_service)));
+      const activeServices = Array.from(new Set((routes || []).map(r => r.internal_service))).filter(s => s !== 'gmail');
 
       if (activeServices.length === 0) {
         await tgApi('sendMessage', { chat_id: chatId, text: '? No active services available right now.' });
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
       await tgApi('sendMessage', {
         chat_id: chatId,
-        text: '?? <b>What service do you need?</b>',
+        text: '🛒 <b>What service do you need?</b>',
         parse_mode: 'HTML',
         reply_markup: { inline_keyboard }
       });
@@ -105,11 +105,11 @@ export async function POST(request: Request) {
           }
         }
         if (row.length > 0) inline_keyboard.push(row);
-        inline_keyboard.push([{ text: '?? Back to Services', callback_data: 'buy_back' }]);
+        inline_keyboard.push([{ text: '🔙 Back to Services', callback_data: 'buy_back' }]);
 
         await tgApi('editMessageText', {
           chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-          text: `?? <b>Select a country for ${getService(svcCode).name}:</b>`,
+          text: `🛒 <b>Select a country for ${getService(svcCode).name}:</b>`,
           reply_markup: { inline_keyboard }
         });
       }
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
              if (wholesaleCost < 0.188) wholesaleCost = 0.188;
           }
           const retailCost = wholesaleCost + PROFIT_MARGIN;
-          const tierLabel = rule.tier === 'premium' ? '?? High-Priority' : '? Standard';
+          const tierLabel = rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard';
           const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${formatMoney(retailCost)}`;
           return [{ text: buttonText, callback_data: `buy_rt_${rule.id}` }];
         };
@@ -148,11 +148,11 @@ export async function POST(request: Request) {
         premiumRules.forEach((rule, i) => inline_keyboard.push(processRule(rule, i)));
         standardRules.forEach((rule, i) => inline_keyboard.push(processRule(rule, i)));
 
-        inline_keyboard.push([{ text: '?? Back to Countries', callback_data: `buy_svc_${svcCode}` }]);
+        inline_keyboard.push([{ text: '🔙 Back to Countries', callback_data: `buy_svc_${svcCode}` }]);
 
         await tgApi('editMessageText', {
           chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-          text: `?? <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).flag} ${getCountry(ctyCode).name}):</b>\n\nChoose your quality tier:`,
+          text: `🛒 <b>Available routes for ${getService(svcCode).name} (${getCountry(ctyCode).flag} ${getCountry(ctyCode).name}):</b>\n\nChoose your quality tier:`,
           reply_markup: { inline_keyboard }
         });
       }
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
 
             await tgApi('sendMessage', { 
               chat_id: chatId, parse_mode: 'HTML',
-              text: `? <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '?? High-Priority' : '? Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n? <i>Waiting for SMS code...</i>`
+              text: `✅ <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n⏳ <i>Waiting for SMS code...</i>`
             });
           } else {
              await tgApi('sendMessage', { chat_id: chatId, text: `? Out of stock for this specific tier. Please try a different route.` });
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
 
          await tgApi('editMessageText', {
            chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-           text: '?? <b>What service do you need?</b>',
+           text: '🛒 <b>What service do you need?</b>',
            reply_markup: { inline_keyboard }
          });
       }
