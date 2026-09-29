@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       // Check if user is linked
       const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
       if (!profile) {
-        await tgApi('sendMessage', { chat_id: chatId, text: '⭐ Your account is not linked. Please link it on the website first.', parse_mode: 'HTML' });
+        await tgApi('sendMessage', { chat_id: chatId, text: '? Your account is not linked. Please link it on the website first.', parse_mode: 'HTML' });
         return NextResponse.json({ success: true });
       }
 
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       const activeServices = Array.from(new Set((routes || []).map(r => r.internal_service))).filter(s => s !== 'gmail');
 
       if (activeServices.length === 0) {
-        await tgApi('sendMessage', { chat_id: chatId, text: '⭐ No active services available right now.' });
+        await tgApi('sendMessage', { chat_id: chatId, text: '? No active services available right now.' });
         return NextResponse.json({ success: true });
       }
 
@@ -226,7 +226,7 @@ export async function POST(request: Request) {
              if (wholesaleCost < 0.188) wholesaleCost = 0.188;
           }
           const retailCost = wholesaleCost + PROFIT_MARGIN;
-          const tierLabel = rule.tier === 'premium' ⭐ '💎 High-Priority' : '⭐ Standard';
+          const tierLabel = rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard';
           const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${formatMoney(retailCost)}`;
           return [{ text: buttonText, callback_data: `buy_rt_${rule.id}` }];
         };
@@ -249,7 +249,7 @@ export async function POST(request: Request) {
         const fullActId = data.replace('check_otp_', '');
         
         const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
-        const protocol = host.includes('localhost') ⭐ 'http' : 'https';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
         fetch(`${protocol}://${host}/api/vsim/status?id=${fullActId}`).catch(()=>{});
         
         await tgApi('answerCallbackQuery', {
@@ -327,8 +327,8 @@ export async function POST(request: Request) {
            return NextResponse.json({ success: true });
         }
 
-        const TARGET_API_URL = rule.target_api === 'smsbower' ⭐ SMSBOWER_API_URL : VSIM_API_URL;
-        const TARGET_API_KEY = rule.target_api === 'smsbower' ⭐ SMSBOWER_API_KEY : VSIM_API_KEY;
+        const TARGET_API_URL = rule.target_api === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;
+        const TARGET_API_KEY = rule.target_api === 'smsbower' ? SMSBOWER_API_KEY : VSIM_API_KEY;
 
         try {
           const apiParams: any = {
@@ -387,7 +387,7 @@ export async function POST(request: Request) {
                await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
                await tgApi('sendMessage', { 
               chat_id: chatId, parse_mode: 'HTML',
-              text: `✅ <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ⭐ '💎 High-Priority' : '⭐ Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n⏳ <i>Waiting for SMS code...</i>`,
+              text: `✅ <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n⏳ <i>Waiting for SMS code...</i>`,
               reply_markup: {
                   inline_keyboard: [[
                       { text: '🔄 Check OTP', callback_data: `check_otp_${rule.target_api}::${actId}` }
