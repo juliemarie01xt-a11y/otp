@@ -5,9 +5,9 @@ import { POPULAR_SERVICES, POPULAR_COUNTRIES, getService, getCountry } from '@/l
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-const VSIM_API_URL = 'https://vsim.space/api/api.php';
+const VSIM_API_URL = 'https://api.vsimpro.com/stubs/handler_api.php';
 const VSIM_API_KEY = process.env.VSIM_API_KEY;
-const SMSBOWER_API_URL = 'https://smsbower.com/stubs/handler_api.php';
+const SMSBOWER_API_URL = 'https://smsbower.page/stubs/handler_api.php';
 const SMSBOWER_API_KEY = process.env.SMSBOWER_API_KEY;
 
 // Helper to send/edit messages
