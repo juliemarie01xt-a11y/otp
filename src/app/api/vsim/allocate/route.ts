@@ -38,15 +38,23 @@ export async function POST(request: Request) {
     // We put it in an array to keep the rest of the code structure the same, but it only iterates once.
     const rules = [rule];
 
-    // 2. Check User's Wallet Balance
+    // 2. Check User's Wallet Balance and Status
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('balance')
+      .select('balance, is_banned, is_email_verified')
       .eq('id', userId)
       .single();
 
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Failed to retrieve wallet balance' }, { status: 500 });
+    }
+
+    if (profile.is_banned) {
+      return NextResponse.json({ error: 'Your account has been temporarily blocked for suspicious activity. Please contact support.' }, { status: 403 });
+    }
+
+    if (profile.is_email_verified === false) {
+      return NextResponse.json({ error: 'You must verify your email address before purchasing numbers.' }, { status: 403 });
     }
 
     const PROFIT_MARGIN = 0.012;
