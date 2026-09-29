@@ -1,45 +1,55 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut } from 'lucide-react';
+import Link from 'next/link';
 
 export default function TelegramGuidePage() {
   const [telegramId, setTelegramId] = useState('');
   const [tgLoading, setTgLoading] = useState(false);
   const [tgMsg, setTgMsg] = useState({ type: '', text: '' });
   const [profile, setProfile] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        router.push('/login');
+        return;
+      }
       const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-      setProfile(data);
+      if (data) setProfile(data);
     };
-    fetchProfile();
-  }, []);
+    loadProfile();
+  }, [router]);
 
   const handleLinkTelegram = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!telegramId.trim()) return;
     setTgLoading(true);
     setTgMsg({ type: '', text: '' });
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not logged in");
-      const res = await fetch(`/api/user/link-telegram?t=${Date.now()}`, {
+      
+      const res = await fetch('/api/user/link-telegram', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ telegramId: String(telegramId).trim() })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ telegramId })
       });
       const data = await res.json();
-
       if (data.success) {
-        setTgMsg({ type: 'success', text: 'Telegram account linked successfully!' });
         setProfile({ ...profile, telegram_id: telegramId });
+        setTgMsg({ type: 'success', text: 'Successfully connected!' });
       } else {
-        setTgMsg({ type: 'error', text: 'Failed: ' + data.error });
+        setTgMsg({ type: 'error', text: data.error || 'Failed to link account' });
       }
     } catch (err: any) {
       setTgMsg({ type: 'error', text: 'Server error: ' + String(err) });
@@ -72,146 +82,158 @@ export default function TelegramGuidePage() {
     setTgLoading(false);
   };
 
+  const COMMANDS = [
+    { cmd: '/buy', desc: 'Purchase a new verification number', icon: LucideShoppingCart },
+    { cmd: '/deposit', desc: 'Top-up your wallet using Crypto', icon: LucideWallet },
+    { cmd: '/active', desc: 'View your active numbers & OTPs', icon: LucideActivitySquare },
+    { cmd: '/status', desc: 'View account stats & lifetime spent', icon: LucideList },
+    { cmd: '/balance', desc: 'Check your current wallet balance', icon: LucideWallet },
+    { cmd: '/unlink', desc: 'Disconnect your Telegram account', icon: LucideLogOut },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black tracking-tight text-zinc-900 flex items-center gap-2">
-          <LucideBot className="w-8 h-8 text-blue-500" />
-          SwiftOTP Telegram Bot
-        </h1>
-        <p className="text-zinc-500 mt-2">Buy numbers and receive SMS codes instantly through our automated Telegram bot.</p>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+      
+      {/* Hero Banner */}
+      <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 sm:p-10 shadow-xl overflow-hidden text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+          <LucideBot className="w-64 h-64 -mt-16 -mr-16 rotate-12" />
+        </div>
+        <div className="relative z-10 max-w-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+              <LucideBot className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Telegram Bot Integration</h1>
+          </div>
+          <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
+            Take full control of your SwiftOTP account directly from Telegram. Purchase numbers, manage your wallet, and receive instant SMS verification codes without ever opening your browser.
+          </p>
+        </div>
+        <div className="relative z-10 shrink-0">
+          <a 
+            href="https://t.me/SwiftOTPOfficial_bot" 
+            target="_blank" 
+            className="inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 px-6 py-3.5 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          >
+            <LucideExternalLink className="w-5 h-5" />
+            Open Bot in Telegram
+          </a>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Side: The Guide */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
-            <h2 className="font-bold text-lg text-zinc-900 mb-6">How to Connect</h2>
-            
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-200 before:to-transparent">
-              
-              <div className="relative flex items-start gap-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold z-10 ring-4 ring-white shrink-0">1</div>
-                <div>
-                  <h3 className="font-bold text-zinc-900">Open the Bot</h3>
-                  <p className="text-sm text-zinc-500 mt-1">Open Telegram and search for <b>@SwiftOTPOfficial_bot</b> or <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-blue-600 hover:underline">click here</a>.</p>
-                </div>
-              </div>
+      {/* Connection Panel */}
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+        <div className="p-6 sm:p-8">
+          <h2 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+            <LucideSmartphone className="w-5 h-5 text-blue-500" />
+            Connection Status
+          </h2>
 
-              <div className="relative flex items-start gap-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold z-10 ring-4 ring-white shrink-0">2</div>
-                <div>
-                  <h3 className="font-bold text-zinc-900">Get Your ID</h3>
-                  <p className="text-sm text-zinc-500 mt-1">Send the command <b>/start</b> to the bot. It will reply with your unique 10-digit Telegram ID.</p>
-                </div>
-              </div>
-
-              <div className="relative flex items-start gap-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold z-10 ring-4 ring-white shrink-0">3</div>
-                <div>
-                  <h3 className="font-bold text-zinc-900">Link Account</h3>
-                  <p className="text-sm text-zinc-500 mt-1">Paste that ID into the secure connection box on this page to link your wallet.</p>
-                </div>
-              </div>
-
+          {tgMsg.text && (
+            <div className={`p-4 rounded-xl text-sm font-medium flex items-start gap-3 mb-6 ${tgMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+              {tgMsg.type === 'error' ? <LucideXCircle className="w-5 h-5 shrink-0 mt-0.5" /> : <LucideCheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />}
+              {tgMsg.text}
             </div>
-          </div>
+          )}
 
-          {/* Security Warning */}
-          <div className="mt-8 p-4 rounded-xl border border-red-200 bg-red-50/50 shadow-sm">
-            <p className="text-[13px] text-red-800 leading-relaxed">
-              <strong className="text-red-900 font-bold flex items-center gap-1.5 mb-1"><LucideAlertTriangle className="w-4 h-4"/> Security Notice</strong> 
-              Never link someone else's Telegram ID. Doing so gives them full control over your wallet balance and private verification codes.
-            </p>
-          </div>
-
-
-        </div>
-
-        {/* Right Side: The Form */}
-        <div>
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden sticky top-8">
-            <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
-              <LucideSmartphone className="w-5 h-5 text-blue-500" />
-              <h2 className="font-bold text-zinc-900">Connection Status</h2>
+          {profile?.telegram_id ? (
+            <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-emerald-50/50 border border-emerald-100 rounded-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
+              <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left z-10">
+                <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0 ring-4 ring-white shadow-sm">
+                  <LucideCheckCircle2 className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-emerald-900 font-bold text-lg">Active Connection</h3>
+                  <p className="text-emerald-700/80 text-sm mt-0.5">Securely linked to Telegram ID: <code className="bg-white px-1.5 py-0.5 rounded border border-emerald-200 font-bold tracking-wide">{profile.telegram_id}</code></p>
+                </div>
+              </div>
+              <button
+                onClick={handleUnlinkTelegram}
+                disabled={tgLoading}
+                className="mt-6 sm:mt-0 w-full sm:w-auto px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50 z-10"
+              >
+                {tgLoading ? 'Disconnecting...' : 'Disconnect Account'}
+              </button>
             </div>
-            <div className="p-6">
-              
-              {tgMsg.text && (
-                <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 mb-4 ${tgMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                  {tgMsg.type === 'error' ? <LucideXCircle className="w-4 h-4 shrink-0" /> : <LucideCheckCircle2 className="w-4 h-4 shrink-0" />}
-                  {tgMsg.text}
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div className="space-y-5">
+                <div className="flex items-start gap-3.5 group">
+                  <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5 shrink-0 transition-colors group-hover:bg-blue-600 group-hover:text-white">1</div>
+                  <p className="text-sm text-zinc-600 leading-relaxed">Open the bot in Telegram and send the command <code className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">/start</code></p>
                 </div>
-              )}
-
-              {profile?.telegram_id ? (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-6 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4 text-emerald-600">
-                    <LucideCheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <h3 className="font-bold text-lg text-emerald-900 mb-1">Account Connected</h3>
-                  <p className="text-sm text-emerald-700 mb-6">Your Telegram ID: <code>{profile.telegram_id}</code></p>
-                  <button
-                    onClick={handleUnlinkTelegram}
-                    disabled={tgLoading}
-                    className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200 font-bold py-3 rounded-lg text-sm transition-colors shadow-sm disabled:opacity-50"
-                  >
-                    {tgLoading ? 'Disconnecting...' : 'Disconnect Telegram'}
-                  </button>
+                <div className="flex items-start gap-3.5 group">
+                  <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5 shrink-0 transition-colors group-hover:bg-blue-600 group-hover:text-white">2</div>
+                  <p className="text-sm text-zinc-600 leading-relaxed">The bot will reply instantly with your unique 10-digit Telegram ID number.</p>
                 </div>
-              ) : (
+                <div className="flex items-start gap-3.5 group">
+                  <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5 shrink-0 transition-colors group-hover:bg-blue-600 group-hover:text-white">3</div>
+                  <p className="text-sm text-zinc-600 leading-relaxed">Paste that ID in the box to securely connect your wallet to the bot.</p>
+                </div>
+              </div>
+              <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-xl">
                 <form onSubmit={handleLinkTelegram} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-1.5">Paste Telegram ID</label>
+                    <label className="block text-sm font-bold text-zinc-700 mb-2">Paste Your Telegram ID</label>
                     <input
                       type="text"
                       value={telegramId}
                       onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ''))}
-                        maxLength={12}
+                      maxLength={12}
                       placeholder="e.g., 8252822439"
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium tracking-wide shadow-sm"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={tgLoading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideMessageSquare className="w-4 h-4" />}
-                    {tgLoading ? 'Linking...' : 'Connect to Telegram'}
+                    {tgLoading ? <LucideActivity className="w-4 h-4 animate-spin" /> : <LucideCheckCircle2 className="w-4 h-4" />}
+                    {tgLoading ? 'Connecting...' : 'Securely Connect Account'}
                   </button>
                 </form>
-              )}
-            </div>
-          </div>
-
-          {/* Available Commands */}
-          <div className="mt-6">
-            <h2 className="text-sm font-bold text-zinc-900 mb-3 flex items-center gap-2">
-              <LucideTerminal className="w-4 h-4 text-zinc-400" />
-              Bot Commands Reference
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {[
-                { cmd: '/buy', desc: 'Purchase number' },
-                { cmd: '/deposit', desc: 'Top-up wallet' },
-                { cmd: '/active', desc: 'View active OTPs' },
-                { cmd: '/status', desc: 'Account stats' },
-                { cmd: '/balance', desc: 'Check balance' },
-                { cmd: '/unlink', desc: 'Disconnect bot' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-zinc-200 bg-white shadow-sm hover:border-blue-200 transition-colors">
-                  <code className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                    {item.cmd}
-                  </code>
-                  <span className="text-xs text-zinc-600 font-medium">{item.desc}</span>
+                <div className="mt-5 flex items-start gap-2 p-3 bg-red-50/50 border border-red-100 rounded-lg">
+                  <LucideAlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-red-700/90 leading-relaxed font-medium">
+                    Never link someone else's ID. Doing so gives them full control over your wallet balance and numbers.
+                  </p>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-
+          )}
         </div>
       </div>
+
+      {/* Bot Capabilities Grid */}
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden p-6 sm:p-8">
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+            <LucideTerminal className="w-5 h-5 text-zinc-500" />
+            Bot Capabilities
+          </h2>
+          <p className="text-sm text-zinc-500 mt-1">Once connected, you can completely control your account directly from Telegram using these commands.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {COMMANDS.map((item, i) => (
+            <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group cursor-default">
+              <div className="p-2.5 bg-white rounded-lg border border-zinc-200 text-zinc-400 group-hover:text-blue-500 group-hover:border-blue-200 transition-colors shadow-sm shrink-0">
+                <item.icon className="w-5 h-5" />
+              </div>
+              <div className="mt-0.5">
+                <code className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                  {item.cmd}
+                </code>
+                <p className="text-sm text-zinc-600 font-medium mt-1.5">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }
