@@ -804,7 +804,7 @@ Click the button below to pay securely via Plisio.`,
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://swiftotp.store/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
+                text: '❌ <b>Account Not Linked</b>\n\nTo use this command, you need to connect your Telegram account.\n\n<b>Choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account'
             });
         } else {
             await tgApi('sendMessage', { 
