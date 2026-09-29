@@ -12,7 +12,7 @@ import {
   LucideSettings, 
   LucideLifeBuoy, 
   LucideLogOut, 
-  LucideShield
+  LucideShield, LucideBot
 } from 'lucide-react';
 
 const MENU = [
