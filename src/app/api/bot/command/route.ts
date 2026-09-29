@@ -74,7 +74,7 @@ export async function POST(request: Request) {
                     await tgApi('sendMessage', { chat_id: chatId, text: '⏳ Creating your account securely...' });
 
                     // Check if they are already linked BEFORE creating the new account
-                    const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
+                    const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId).single();
                     const isAlreadyLinked = !!existingProfile;
                     let originalEmail = 'Unknown';
                     
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
             await supabaseAdmin.from('bot_sessions').upsert({ telegram_id: chatId, step: 'AWAITING_EMAIL' });
             
             // Tell them clearly if they are already linked so there is no confusion
-            const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
+            const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId).single();
             const introMsg = profile 
                 ? `🚀 <b>Let's create a new SwiftOTP account!</b>\n\n<i>(Note: This Telegram bot is already linked to an account. Your new account will be created safely, but it won't replace your currently linked wallet.)</i>\n\nPlease send me your <b>Email Address</b>.` 
                 : `🚀 <b>Let's create your SwiftOTP account!</b>\n\nPlease send me your <b>Email Address</b>.`;
@@ -156,11 +156,66 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
     }
 
+    
+    // Handle Resend Verification Button
+    if (update.message && update.message.text && update.message.text.trim() === '📧 Resend Verification') {
+        const chatId = update.message.chat.id;
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
+        if (!profile) return NextResponse.json({ success: true });
+
+        // Block if not verified
+        if (profile.is_email_verified === false) {
+            await tgApi('sendMessage', {
+                chat_id: chatId,
+                text: '⚠️ <b>Email Not Verified</b>
+
+You must verify your email address before using the bot.
+
+Please check your inbox/spam folder.',
+                parse_mode: 'HTML',
+                reply_markup: {
+                    keyboard: [[{ text: '📧 Resend Verification' }]],
+                    resize_keyboard: true,
+                    one_time_keyboard: false
+                }
+            });
+            return NextResponse.json({ success: true });
+        }
+
+
+        if (profile.is_email_verified) {
+           await tgApi('sendMessage', { 
+               chat_id: chatId, 
+               text: '✅ Your email is already verified! You can now use all commands.',
+               reply_markup: { remove_keyboard: true }
+           });
+           return NextResponse.json({ success: true });
+        }
+
+        const now = new Date();
+        const lastResend = profile.last_resend_at ? new Date(profile.last_resend_at) : new Date(0);
+        const diffMs = now.getTime() - lastResend.getTime();
+
+        if (diffMs < 60000) {
+           const secondsLeft = Math.ceil((60000 - diffMs) / 1000);
+           await tgApi('sendMessage', { chat_id: chatId, text: `⏳ Please wait ${secondsLeft} seconds before requesting another email.` });
+           return NextResponse.json({ success: true });
+        }
+
+        const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        if (user && user.email) {
+            await supabaseAdmin.auth.resend({ type: 'signup', email: user.email });
+            await supabaseAdmin.from('profiles').update({ last_resend_at: now.toISOString() }).eq('id', profile.id);
+            await tgApi('sendMessage', { chat_id: chatId, text: '📧 A new verification email has been sent to your inbox/spam folder!' });
+        }
+        return NextResponse.json({ success: true });
+    }
+
     // Handle /start command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase().startsWith('/start')) {
         const chatId = update.message.chat.id;
         
-        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
         
         if (profile) {
             let email = 'your SwiftOTP account';
@@ -191,7 +246,7 @@ If you want to unlink it and connect a different account, type /unlink`
     // Handle /status command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/status') {
         const chatId = update.message.chat.id;
-        const { data: profile } = await supabaseAdmin.from('profiles').select('id, balance').eq('telegram_id', chatId.toString()).single();
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id, balance, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
         
         if (!profile) {
             await tgApi('sendMessage', { 
@@ -231,7 +286,7 @@ If you want to unlink it and connect a different account, type /unlink`
     // Handle /balance command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/balance') {
         const chatId = update.message.chat.id;
-        const { data: profile } = await supabaseAdmin.from('profiles').select('balance').eq('telegram_id', chatId.toString()).single();
+        const { data: profile } = await supabaseAdmin.from('profiles').select('balance, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
         if (!profile) {
             await tgApi('sendMessage', { 
               chat_id: chatId, 
@@ -249,7 +304,7 @@ $${Number(profile.balance).toFixed(2)}`, parse_mode: 'HTML' });
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/unlink') {
       const chatId = update.message.chat.id;
 
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+      const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
       if (!profile) {
         await tgApi('sendMessage', { chat_id: chatId, text: '❌ Your account is not currently linked.' });
         return NextResponse.json({ success: true });
@@ -265,7 +320,7 @@ $${Number(profile.balance).toFixed(2)}`, parse_mode: 'HTML' });
     // Handle /deposit command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase().startsWith('/deposit')) {
       const chatId = update.message.chat.id;
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+      const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
       
       if (profile) {
          const parts = update.message.text.trim().split(' ');
@@ -320,7 +375,7 @@ Click the button below to pay securely via Plisio.`,
     // Handle /active command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/active') {
       const chatId = update.message.chat.id;
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+      const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
       
       if (profile) {
         const { data: pending } = await supabaseAdmin.from('activations').select('*').eq('user_id', profile.id).eq('status', 'PENDING');
@@ -369,7 +424,7 @@ Click the button below to pay securely via Plisio.`,
       const chatId = update.message.chat.id;
 
       // Check if user is linked
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+      const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
       if (!profile) {
         await tgApi('sendMessage', { 
           chat_id: chatId, 
@@ -422,6 +477,26 @@ Click the button below to pay securely via Plisio.`,
 
       const { data: profile } = await supabaseAdmin.from('profiles').select('*').eq('telegram_id', chatId.toString()).single();
       if (!profile) return NextResponse.json({ success: true });
+
+        // Block if not verified
+        if (profile.is_email_verified === false) {
+            await tgApi('sendMessage', {
+                chat_id: chatId,
+                text: '⚠️ <b>Email Not Verified</b>
+
+You must verify your email address before using the bot.
+
+Please check your inbox/spam folder.',
+                parse_mode: 'HTML',
+                reply_markup: {
+                    keyboard: [[{ text: '📧 Resend Verification' }]],
+                    resize_keyboard: true,
+                    one_time_keyboard: false
+                }
+            });
+            return NextResponse.json({ success: true });
+        }
+
 
       // STEP A: Picked a Service -> Show Countries
       if (data.startsWith('buy_svc_')) {
@@ -510,8 +585,28 @@ Click the button below to pay securely via Plisio.`,
       else if (data.startsWith('deposit_')) {
          const amountStr = data.replace('deposit_', '');
          const amount = Number(amountStr);
-         const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+         const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
          if (!profile) return NextResponse.json({ success: true });
+
+        // Block if not verified
+        if (profile.is_email_verified === false) {
+            await tgApi('sendMessage', {
+                chat_id: chatId,
+                text: '⚠️ <b>Email Not Verified</b>
+
+You must verify your email address before using the bot.
+
+Please check your inbox/spam folder.',
+                parse_mode: 'HTML',
+                reply_markup: {
+                    keyboard: [[{ text: '📧 Resend Verification' }]],
+                    resize_keyboard: true,
+                    one_time_keyboard: false
+                }
+            });
+            return NextResponse.json({ success: true });
+        }
+
 
          await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '⏳ Generating secure crypto invoice...' });
 
@@ -571,8 +666,28 @@ Click the button below to pay securely via Plisio.`,
       else if (data.startsWith('deposit_')) {
          const amountStr = data.replace('deposit_', '');
          const amount = Number(amountStr);
-         const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+         const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
          if (!profile) return NextResponse.json({ success: true });
+
+        // Block if not verified
+        if (profile.is_email_verified === false) {
+            await tgApi('sendMessage', {
+                chat_id: chatId,
+                text: '⚠️ <b>Email Not Verified</b>
+
+You must verify your email address before using the bot.
+
+Please check your inbox/spam folder.',
+                parse_mode: 'HTML',
+                reply_markup: {
+                    keyboard: [[{ text: '📧 Resend Verification' }]],
+                    resize_keyboard: true,
+                    one_time_keyboard: false
+                }
+            });
+            return NextResponse.json({ success: true });
+        }
+
 
          await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '⏳ Generating secure crypto invoice...' });
 
@@ -620,8 +735,28 @@ Click the button below to pay securely via Plisio.`,
       // Handle Cancel Action Button
       else if (data.startsWith('cancel_act_')) {
         const fullActId = data.replace('cancel_act_', '');
-        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
         if (!profile) return NextResponse.json({ success: true });
+
+        // Block if not verified
+        if (profile.is_email_verified === false) {
+            await tgApi('sendMessage', {
+                chat_id: chatId,
+                text: '⚠️ <b>Email Not Verified</b>
+
+You must verify your email address before using the bot.
+
+Please check your inbox/spam folder.',
+                parse_mode: 'HTML',
+                reply_markup: {
+                    keyboard: [[{ text: '📧 Resend Verification' }]],
+                    resize_keyboard: true,
+                    one_time_keyboard: false
+                }
+            });
+            return NextResponse.json({ success: true });
+        }
+
 
         const { data: activation } = await supabaseAdmin.from('activations').select('cost, status, phone_number').eq('vsim_activation_id', fullActId).eq('user_id', profile.id).single();
         
@@ -798,7 +933,7 @@ Click the button below to pay securely via Plisio.`,
     // Fallback for unknown text/intents
     if (update.message && update.message.text) {
         const chatId = update.message.chat.id;
-        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at').eq('telegram_id', chatId.toString()).single();
         
         if (!profile) {
             await tgApi('sendMessage', { 
