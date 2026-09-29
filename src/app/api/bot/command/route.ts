@@ -86,20 +86,34 @@ export async function POST(request: Request) {
         if (!pending || pending.length === 0) {
           await tgApi('sendMessage', { chat_id: chatId, text: 'ℹ️ You have no active numbers waiting for SMS right now.' });
         } else {
-          let msg = `⏳ <b>Your Active Numbers:</b>\n\n`;
           
           // Next.js requires absolute URL for fetch in API routes
           const headersList = request.headers;
           const host = headersList.get('host') || 'otp-three-liard.vercel.app';
-          const protocol = host.includes('localhost') ⭐ 'http' : 'https';
+          const protocol = host.includes('localhost') ? 'http' : 'https';
           const baseUrl = `${protocol}://${host}`;
           
+          await tgApi('sendMessage', { chat_id: chatId, text: '⏳ <b>Your Active Numbers:</b>', parse_mode: 'HTML' });
+          
           for (const act of pending) {
-             msg += `Service: <b>${act.service}</b>\nNumber: <code>${act.phone_number}</code>\nCost: ${Number(act.cost).toFixed(2)}\n\n`;
+             const inline_keyboard = [[
+                 { text: '🔄 Check OTP', callback_data: `check_otp_${act.vsim_activation_id}` },
+                 { text: '❌ Cancel', callback_data: `cancel_act_${act.vsim_activation_id}` }
+             ]];
+             
+             const msg = `Service: <b>${getService(act.service).name || act.service}</b>\nNumber: <code>+${act.phone_number}</code>\nCost: ${Number(act.cost).toFixed(2)}`;
+             
+             await tgApi('sendMessage', { 
+                 chat_id: chatId, 
+                 text: msg, 
+                 parse_mode: 'HTML',
+                 reply_markup: { inline_keyboard }
+             });
+             
              // Ping the centralized status check asynchronously
              fetch(`${baseUrl}/api/vsim/status?id=${act.vsim_activation_id}`).catch(()=>{});
           }
-          await tgApi('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'HTML' });
+
         }
       }
       return NextResponse.json({ success: true });
