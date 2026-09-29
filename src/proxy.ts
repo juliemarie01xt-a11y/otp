@@ -26,7 +26,7 @@ export default async function proxy(request: NextRequest) {
   // ----------------------------------------------------------------------
   // UPSTASH EDGE RATE LIMITING
   // ----------------------------------------------------------------------
-  const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+  const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
   
   if (request.nextUrl.pathname.startsWith('/api/') && ratelimit) {
     try {
