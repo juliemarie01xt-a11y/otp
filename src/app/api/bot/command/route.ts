@@ -38,7 +38,9 @@ export async function POST(request: Request) {
     if (update.message && update.message.text && update.message.text.startsWith('/')) {
         const chatId = update.message.chat.id.toString();
         // Ignore errors if table doesn't exist yet
-        await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId).catch(() => {});
+        try {
+            await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
+        } catch (e) {}
     }
 
     // 2. STATE MACHINE FOR /CREATE ACCOUNT FLOW
