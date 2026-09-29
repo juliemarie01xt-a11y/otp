@@ -197,8 +197,6 @@ Click the button below to pay securely via Plisio.`,
         if (!pending || pending.length === 0) {
           await tgApi('sendMessage', { chat_id: chatId, text: 'ℹ️ You have no active numbers waiting for SMS right now.' });
         } else {
-          let msg = `⏳ <b>Your Active Numbers:</b>\n\n`;
-          
           // Next.js requires absolute URL for fetch in API routes
           const headersList = request.headers;
           const host = headersList.get('host') || 'swiftotp.store';
@@ -206,11 +204,31 @@ Click the button below to pay securely via Plisio.`,
           const baseUrl = `${protocol}://${host}`;
           
           for (const act of pending) {
-             msg += `Service: <b>${act.service}</b>\nNumber: <code>${act.phone_number}</code>\nCost: ${Number(act.cost).toFixed(2)}\n\n`;
+             const createdTime = new Date(act.created_at).getTime();
+             const now = new Date().getTime();
+             const elapsedMins = (now - createdTime) / 60000;
+             const remainingMins = Math.max(0, 15 - Math.floor(elapsedMins));
+
+             let msg = `⏳ <b>Waiting for SMS...</b>\n\n`;
+             msg += `Service: <b>${act.service}</b>\n`;
+             msg += `Number: <code>+${act.phone_number}</code>\n`;
+             msg += `Cost: <b>$${Number(act.cost).toFixed(2)}</b>\n`;
+             msg += `Time Left: <b>${remainingMins} minutes</b> <i>(Auto-refunds at 0)</i>\n`;
+
              // Ping the centralized status check asynchronously
              fetch(`${baseUrl}/api/vsim/status?id=${act.vsim_activation_id}`).catch(()=>{});
+             
+             await tgApi('sendMessage', { 
+               chat_id: chatId, 
+               text: msg, 
+               parse_mode: 'HTML',
+               reply_markup: {
+                 inline_keyboard: [[
+                    { text: '❌ Cancel & Refund', callback_data: `cancel_act_${act.vsim_activation_id}` }
+                 ]]
+               }
+             });
           }
-          await tgApi('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'HTML' });
         }
       }
       return NextResponse.json({ success: true });
