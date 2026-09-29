@@ -15,6 +15,8 @@ You will need to search and replace the old domain with the new domain in these 
   - Update sender email: `from: 'SwiftOTP Security <noreply@newdomain.com>',`
 
 **B. Next.js API Routes**
+- `src/app/api/admin/bulk-set-routes/route.ts`
+  - Update the fallback host: `const host = request.headers.get('host') || 'newdomain.com';`
 - `src/app/api/user/send-link-otp/route.ts`
   - Update sender email: `from: 'SwiftOTP Security <noreply@newdomain.com>',`
 - `src/app/api/bot/command/route.ts`
