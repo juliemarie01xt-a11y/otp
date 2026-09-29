@@ -183,11 +183,12 @@ Choose your quality tier:`,
         try {
           const apiParams: any = {
             api_key: TARGET_API_KEY,
-            action: 'getNumber',
+            action: 'getNumberV2',
             service: API_SERVICE,
             country: rule.country_id
           };
           if (rule.target_operator) apiParams.operator = rule.target_operator;
+          if (rule.target_provider) apiParams.providerIds = rule.target_provider;
           
           const res = await axios.get(TARGET_API_URL, { params: apiParams, validateStatus: (s) => s < 500 });
           const resData = res.data;
