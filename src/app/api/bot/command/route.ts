@@ -40,11 +40,18 @@ export async function POST(request: Request) {
         const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
         
         if (profile) {
+            let email = 'your SwiftOTP account';
+            try {
+               const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+               if (user && user.email) email = user.email;
+            } catch (e) {}
+
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
-                text: '✅ This Telegram account is already linked to a SwiftOTP account!
+                parse_mode: 'HTML',
+                text: `✅ This Telegram account is already linked to: <b>${email}</b>
 
-If you want to unlink it, type /unlink' 
+If you want to unlink it and connect a different account, type /unlink` 
             });
         } else {
             await tgApi('sendMessage', { 
