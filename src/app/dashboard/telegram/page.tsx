@@ -125,30 +125,7 @@ export default function TelegramGuidePage() {
             </p>
           </div>
 
-          {/* Available Commands */}
-          <div className="mt-6">
-            <h2 className="text-sm font-bold text-zinc-900 mb-3 flex items-center gap-2">
-              <LucideTerminal className="w-4 h-4 text-zinc-400" />
-              Bot Commands Reference
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {[
-                { cmd: '/buy', desc: 'Purchase number' },
-                { cmd: '/deposit', desc: 'Top-up wallet' },
-                { cmd: '/active', desc: 'View active OTPs' },
-                { cmd: '/status', desc: 'Account stats' },
-                { cmd: '/balance', desc: 'Check balance' },
-                { cmd: '/unlink', desc: 'Disconnect bot' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-zinc-200 bg-white shadow-sm hover:border-blue-200 transition-colors">
-                  <code className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                    {item.cmd}
-                  </code>
-                  <span className="text-xs text-zinc-600 font-medium">{item.desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+
         </div>
 
         {/* Right Side: The Form */}
@@ -207,6 +184,32 @@ export default function TelegramGuidePage() {
               )}
             </div>
           </div>
+
+          {/* Available Commands */}
+          <div className="mt-6">
+            <h2 className="text-sm font-bold text-zinc-900 mb-3 flex items-center gap-2">
+              <LucideTerminal className="w-4 h-4 text-zinc-400" />
+              Bot Commands Reference
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                { cmd: '/buy', desc: 'Purchase number' },
+                { cmd: '/deposit', desc: 'Top-up wallet' },
+                { cmd: '/active', desc: 'View active OTPs' },
+                { cmd: '/status', desc: 'Account stats' },
+                { cmd: '/balance', desc: 'Check balance' },
+                { cmd: '/unlink', desc: 'Disconnect bot' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-zinc-200 bg-white shadow-sm hover:border-blue-200 transition-colors">
+                  <code className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                    {item.cmd}
+                  </code>
+                  <span className="text-xs text-zinc-600 font-medium">{item.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
