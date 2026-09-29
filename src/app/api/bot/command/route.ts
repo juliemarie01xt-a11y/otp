@@ -804,7 +804,7 @@ Click the button below to pay securely via Plisio.`,
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: '❌ <b>Account Not Linked</b>\n\nTo use this command, you need to connect your Telegram account.\n\n<b>Choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account'
+                text: '👋 <b>Hello there!</b>\n\nIt looks like you haven\'t connected a SwiftOTP account to this chat yet.\n\n<b>To get started, choose an option:</b>\n🔹 Type /create to instantly create a brand new account\n🔹 Type /start to link an existing website account'
             });
         } else {
             await tgApi('sendMessage', { 
