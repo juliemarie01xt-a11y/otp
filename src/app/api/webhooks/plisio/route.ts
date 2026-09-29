@@ -52,23 +52,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // 3. Process completed (paid in full), mismatch (overpaid), or expired (partial payment).
-    //    Per Plisio docs: mismatch = overpaid, expired = may have partial payment.
+    // 3. Process completed, mismatch (overpaid), or expired (partial payment).
     if (data.status !== 'completed' && data.status !== 'mismatch' && data.status !== 'expired') {
       return NextResponse.json({ success: true, message: `Status '${data.status}' ignored` });
     }
 
     // 4. Extract order data
     const orderId = data.order_number;
-    const amountPaidStr = data.source_amount;
+    let amountPaidStr = data.source_amount;
 
     if (!orderId || !amountPaidStr) {
       return NextResponse.json({ error: 'Missing order_number or source_amount' }, { status: 400 });
     }
     
-    // If it expired, verify they actually paid something. If $0, ignore it.
-    if (data.status === 'expired' && Number(amountPaidStr) <= 0) {
-      return NextResponse.json({ success: true, message: 'Expired with no payment, ignored' });
+    // DYNAMIC PARTIAL PAYMENT RECOVERY:
+    // If they underpaid and it expired, source_amount is just the invoice target.
+    // We must calculate exactly what they actually sent in USD to be fair.
+    if (data.status === 'expired') {
+        const actualCryptoSent = Number(data.amount);
+        const exchangeRate = Number(data.source_rate);
+        
+        if (!actualCryptoSent || !exchangeRate || actualCryptoSent <= 0) {
+            return NextResponse.json({ success: true, message: 'Expired with no payment, ignored' });
+        }
+        
+        // Convert actual crypto sent into USD
+        const actualUsdSent = actualCryptoSent / exchangeRate;
+        
+        // Target Credit = (Actual USD Sent * 0.99) / 1.005
+        const safeCredit = (actualUsdSent * 0.99) / 1.005;
+        
+        // We override amountPaidStr to simulate that they "requested" this safe credit.
+        // The webhook bottom math divides by (1.015 / 1.01), so we reverse multiply it here!
+        amountPaidStr = (safeCredit * (1.015 / 1.01)).toString();
     }
 
     // 5. ATOMIC LOCK: Update the pending deposit to COMPLETED.
