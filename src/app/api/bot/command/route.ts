@@ -198,8 +198,8 @@ Choose your quality tier:`,
           
           if (resData && resData.success !== false && actId && phone) {
             const { error: balErr } = await supabaseAdmin.rpc('deduct_balance', {
-              user_id: profile.id,
-              amount: retailCost
+              p_user_id: profile.id,
+              p_amount: retailCost
             });
 
             if (balErr) {
