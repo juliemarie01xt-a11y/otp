@@ -73,6 +73,10 @@ export async function POST(request: Request) {
 
                     await tgApi('sendMessage', { chat_id: chatId, text: '⏳ Creating your account securely...' });
 
+                    // Check if they are already linked BEFORE creating the new account
+                    const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
+                    const isAlreadyLinked = !!existingProfile;
+
                     // Use signUp so the Resend email hook is automatically triggered!
                     const { data, error } = await supabaseAdmin.auth.signUp({
                       email: session.temp_email,
@@ -88,17 +92,28 @@ export async function POST(request: Request) {
                     // Clean up session
                     await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
                     
-                    // Link the telegram ID to the new profile. Wait a moment to ensure the database trigger creates the profile first.
-                    setTimeout(async () => {
-                        if (data?.user?.id) {
-                            await supabaseAdmin.from('profiles').update({ telegram_id: chatId }).eq('id', data.user.id);
-                        }
-                    }, 1500);
+                    let successMessage = `🎉 <b>Account created successfully!</b>\n\n`;
+
+                    if (isAlreadyLinked) {
+                        successMessage += `Your new account (<code>${session.temp_email}</code>) has been created! <i>(Note: This bot remains securely linked to your original account)</i>.\n\n`;
+                    } else {
+                        successMessage += `Your account (<code>${session.temp_email}</code>) has been securely linked to this Telegram bot.\n\n`;
+                        // Link the telegram ID to the new profile since they weren't linked before
+                        setTimeout(async () => {
+                            if (data?.user?.id) {
+                                await supabaseAdmin.from('profiles').update({ telegram_id: chatId }).eq('id', data.user.id);
+                            }
+                        }, 1500);
+                    }
+
+                    successMessage += `📧 <b>Please check your email inbox (and Spam/Junk folder)</b> to verify your email address.\n\n`;
+                    successMessage += `⚠️ <b>IMPORTANT:</b> For your security, please completely delete your previous message containing your password from this chat, and remember it!\n\n`;
+                    successMessage += `<i>Type /buy to get started or /deposit to add funds.</i>`;
 
                     await tgApi('sendMessage', { 
                         chat_id: chatId, 
                         parse_mode: 'HTML',
-                        text: `🎉 <b>Account created successfully!</b>\n\nYour account (<code>${session.temp_email}</code>) has been securely linked to this Telegram bot.\n\n📧 <b>Please check your email inbox (and Spam/Junk folder)</b> to verify your email address.\n\n⚠️ <b>IMPORTANT:</b> For your security, please completely delete your previous message containing your password from this chat, and remember it!\n\n<i>Type /buy to get started or /deposit to add funds.</i>` 
+                        text: successMessage 
                     });
                     return NextResponse.json({ success: true });
                 }
@@ -112,20 +127,20 @@ export async function POST(request: Request) {
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/create') {
         const chatId = update.message.chat.id.toString();
         
-        // Check if already linked
-        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
-        if (profile) {
-            await tgApi('sendMessage', { chat_id: chatId, text: '❌ This Telegram account is already linked to a SwiftOTP account! Type /status to check.' });
-            return NextResponse.json({ success: true });
-        }
-
-        // Start flow
         try {
+            // Start flow
             await supabaseAdmin.from('bot_sessions').upsert({ telegram_id: chatId, step: 'AWAITING_EMAIL' });
+            
+            // Tell them clearly if they are already linked so there is no confusion
+            const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
+            const introMsg = profile 
+                ? `🚀 <b>Let's create a new SwiftOTP account!</b>\n\n<i>(Note: This Telegram bot is already linked to an account. Your new account will be created safely, but it won't replace your currently linked wallet.)</i>\n\nPlease send me your <b>Email Address</b>.` 
+                : `🚀 <b>Let's create your SwiftOTP account!</b>\n\nPlease send me your <b>Email Address</b>.`;
+
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: `🚀 <b>Let's create your SwiftOTP account!</b>\n\nPlease send me your <b>Email Address</b>.` 
+                text: introMsg 
             });
         } catch (err) {
             await tgApi('sendMessage', { chat_id: chatId, text: '❌ System error starting account creation. Please ensure the bot_sessions table is created.' });
