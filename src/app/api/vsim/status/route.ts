@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -51,11 +51,48 @@ export async function GET(request: Request) {
     if (typeof data === 'string') {
         if (data.startsWith('STATUS_OK:')) {
             const code = data.split(':')[1];
-            // Update our database to store the OTP and mark as completed
-            await supabaseAdmin
+            
+            // ATOMIC LOCK: Try to change status from PENDING to COMPLETED.
+            const { data: updatedAct } = await supabaseAdmin
               .from('activations')
               .update({ status: 'COMPLETED', code: code })
-              .eq('vsim_activation_id', id.toString());
+              .eq('vsim_activation_id', id.toString())
+              .eq('status', 'PENDING')
+              .select('user_id, service, country');
+              
+            // If it was just completed right now (not previously completed by another thread)
+            if (updatedAct && updatedAct.length > 0) {
+                const userId = updatedAct[0].user_id;
+                
+                // Fetch user to see if they have a Telegram Bot linked
+                const { data: profile } = await supabaseAdmin.from('profiles').select('telegram_id').eq('id', userId).single();
+                
+                if (profile && profile.telegram_id) {
+                    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+                    if (BOT_TOKEN) {
+                        try {
+                            const tgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                            await fetch(tgUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: profile.telegram_id,
+                                    parse_mode: 'HTML',
+                                    text: `💬 <b>New SMS Received!</b>\n\nService: <b>${updatedAct[0].service}</b>\nCode: <code>${code}</code>\n\n<i>This number is now completed.</i>`
+                                })
+                            });
+                        } catch (e) {
+                            console.error("TG Ping Error:", e);
+                        }
+                    }
+                }
+            } else {
+                // If the update returned 0 rows, it might already be COMPLETED. We still want to return the code to the frontend!
+                const { data: existing } = await supabaseAdmin.from('activations').select('status, code').eq('vsim_activation_id', id.toString()).single();
+                if (existing && existing.status === 'COMPLETED' && existing.code) {
+                    return NextResponse.json({ status: 'COMPLETED', code: existing.code });
+                }
+            }
               
             return NextResponse.json({ status: 'COMPLETED', code });
         }
