@@ -50,32 +50,6 @@ export async function POST(request: Request) {
     }
 
 
-
-    // Handle /cancel command
-    if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/cancel') {
-      const chatId = update.message.chat.id;
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId.toString()).single();
-      
-      if (profile) {
-        const { data: pending } = await supabaseAdmin.from('activations').select('*').eq('user_id', profile.id).eq('status', 'PENDING');
-        if (!pending || pending.length === 0) {
-          await tgApi('sendMessage', { chat_id: chatId, text: 'ℹ️ You have no active numbers to cancel.' });
-        } else {
-          const inline_keyboard = [];
-          for (const act of pending) {
-             inline_keyboard.push([{ text: `❌ Cancel +${act.phone_number}`, callback_data: `cancel_act_${act.vsim_activation_id}` }]);
-          }
-          await tgApi('sendMessage', { 
-            chat_id: chatId, 
-            parse_mode: 'HTML',
-            text: `❌ <b>Cancel a Number</b>\n\nSelect the number you want to cancel. The funds will be instantly refunded to your wallet.`,
-            reply_markup: { inline_keyboard }
-          });
-        }
-      }
-      return NextResponse.json({ success: true });
-    }
-
     // Handle /active command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/active') {
       const chatId = update.message.chat.id;
@@ -86,6 +60,7 @@ export async function POST(request: Request) {
         if (!pending || pending.length === 0) {
           await tgApi('sendMessage', { chat_id: chatId, text: 'ℹ️ You have no active numbers waiting for SMS right now.' });
         } else {
+          let msg = `⏳ <b>Your Active Numbers:</b>\n\n`;
           
           // Next.js requires absolute URL for fetch in API routes
           const headersList = request.headers;
@@ -93,27 +68,12 @@ export async function POST(request: Request) {
           const protocol = host.includes('localhost') ? 'http' : 'https';
           const baseUrl = `${protocol}://${host}`;
           
-          await tgApi('sendMessage', { chat_id: chatId, text: '⏳ <b>Your Active Numbers:</b>', parse_mode: 'HTML' });
-          
           for (const act of pending) {
-             const inline_keyboard = [[
-                 { text: '🔄 Check OTP', callback_data: `check_otp_${act.vsim_activation_id}` },
-                 { text: '❌ Cancel', callback_data: `cancel_act_${act.vsim_activation_id}` }
-             ]];
-             
-             const msg = `Service: <b>${getService(act.service).name || act.service}</b>\nNumber: <code>+${act.phone_number}</code>\nCost: ${Number(act.cost).toFixed(2)}`;
-             
-             await tgApi('sendMessage', { 
-                 chat_id: chatId, 
-                 text: msg, 
-                 parse_mode: 'HTML',
-                 reply_markup: { inline_keyboard }
-             });
-             
+             msg += `Service: <b>${act.service}</b>\nNumber: <code>${act.phone_number}</code>\nCost: ${Number(act.cost).toFixed(2)}\n\n`;
              // Ping the centralized status check asynchronously
              fetch(`${baseUrl}/api/vsim/status?id=${act.vsim_activation_id}`).catch(()=>{});
           }
-
+          await tgApi('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'HTML' });
         }
       }
       return NextResponse.json({ success: true });
@@ -243,23 +203,16 @@ export async function POST(request: Request) {
         });
       }
 
-      
+
       // Handle Check OTP Button
       else if (data.startsWith('check_otp_')) {
         const fullActId = data.replace('check_otp_', '');
-        
         const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
         const protocol = host.includes('localhost') ? 'http' : 'https';
         fetch(`${protocol}://${host}/api/vsim/status?id=${fullActId}`).catch(()=>{});
-        
-        await tgApi('answerCallbackQuery', {
-          callback_query_id: update.callback_query.id,
-          text: '⏳ Checking for SMS...',
-          show_alert: false
-        });
+        await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '⏳ Checking for SMS...', show_alert: false });
       }
-
-
+      
       // Handle Cancel Action Button
       else if (data.startsWith('cancel_act_')) {
         const fullActId = data.replace('cancel_act_', '');
@@ -291,15 +244,15 @@ export async function POST(request: Request) {
                     await supabaseAdmin.rpc('refund_balance', { p_user_id: profile.id, p_amount: Number(activation.cost) });
                     await tgApi('editMessageText', { 
                       chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-                      text: `✅ <b>Number Cancelled</b>\n\nNumber: <code>+${activation.phone_number}</code>\nRefunded: <b>${Number(activation.cost).toFixed(2)}</b>`
+                      text: `✅ <b>Number Cancelled</b>\n\nNumber: <code>+${activation.phone_number}</code>\nRefunded: <b>$${Number(activation.cost).toFixed(2)}</b>`
                     });
                 } else {
-                    await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Cancellation conflict. It may have already received a code.' });
+                    await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Cancellation conflict.' });
                 }
             } else {
                 await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: `❌ Failed to cancel at provider: ${result}` });
             }
-        } catch (e) {
+        } catch (e: any) {
             await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: `❌ Cancellation error: ${e.message}` });
         }
       }
@@ -385,7 +338,21 @@ export async function POST(request: Request) {
 
             if (balErr) {
                await axios.get(TARGET_API_URL, { params: { api_key: TARGET_API_KEY, action: 'setStatus', id: actId, status: 8 }});
-               await tgApi('sendMessage', { 
+               await tgApi('sendMessage', { chat_id: chatId, text: '❌ Insufficient balance (concurrency check). Order cancelled.' });
+               return NextResponse.json({ success: true });
+            }
+
+            await supabaseAdmin.from('activations').insert({
+              user_id: profile.id,
+              vsim_activation_id: `${rule.target_api}::${actId}`,
+              country: rule.country_id,
+              service: rule.internal_service,
+              phone_number: phone.toString(),
+              cost: retailCost,
+              status: 'PENDING'
+            });
+
+            await tgApi('sendMessage', { 
               chat_id: chatId, parse_mode: 'HTML',
               text: `✅ <b>Number Purchased!</b>\n\nService: ${getService(rule.internal_service).name}\nTier: ${rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard'}\nNumber: <code>+${phone}</code>\nCost: $${formatMoney(retailCost)}\n\n⏳ <i>Waiting for SMS code...</i>`,
               reply_markup: {
