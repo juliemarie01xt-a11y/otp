@@ -76,6 +76,14 @@ export async function POST(request: Request) {
                     // Check if they are already linked BEFORE creating the new account
                     const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id').eq('telegram_id', chatId).single();
                     const isAlreadyLinked = !!existingProfile;
+                    let originalEmail = 'Unknown';
+                    
+                    if (isAlreadyLinked) {
+                        try {
+                           const { data: { user: origUser } } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id);
+                           if (origUser && origUser.email) originalEmail = origUser.email;
+                        } catch (e) {}
+                    }
 
                     // Use signUp so the Resend email hook is automatically triggered!
                     const { data, error } = await supabaseAdmin.auth.signUp({
@@ -95,7 +103,7 @@ export async function POST(request: Request) {
                     let successMessage = `🎉 <b>Account created successfully!</b>\n\n`;
 
                     if (isAlreadyLinked) {
-                        successMessage += `Your new account (<code>${session.temp_email}</code>) has been created! <i>(Note: This bot remains securely linked to your original account)</i>.\n\n`;
+                        successMessage += `Your new account (<code>${session.temp_email}</code>) has been created! <i>(Note: This bot remains securely linked to your original account <code>${originalEmail}</code>)</i>.\n\n`;
                     } else {
                         successMessage += `Your account (<code>${session.temp_email}</code>) has been securely linked to this Telegram bot.\n\n`;
                         // Link the telegram ID to the new profile since they weren't linked before
