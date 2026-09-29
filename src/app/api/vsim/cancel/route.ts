@@ -100,8 +100,8 @@ export async function POST(request: Request) {
                     newBalance = rpcBalance;
                 }
 
-                // Add a Hoarder Strike!
-                await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: userId });
+                // Add a Hoarder Strike using the new Probability Engine!
+                await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: userId, p_activation_id: id.toString() });
             }
 
             return NextResponse.json({ success: true, message: data, refundedAmount: refundAmount, newBalance });
