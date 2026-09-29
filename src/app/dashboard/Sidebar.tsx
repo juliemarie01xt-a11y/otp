@@ -18,11 +18,11 @@ import {
 const MENU = [
   { name: 'Dashboard', path: '/dashboard', icon: LucideLayoutDashboard },
   { name: 'Buy Number', path: '/dashboard/buy', icon: LucideShoppingCart },
-  { name: 'Telegram Bot', path: '/dashboard/telegram', icon: LucideBot },
   { name: 'Recharge / Top-Up', path: '/dashboard/recharge', icon: LucideWallet },
   { name: 'Numbers', path: '/dashboard/history', icon: LucideList },
   { name: 'My Profile', path: '/dashboard/settings', icon: LucideSettings },
   { name: 'Help & Support', path: '/dashboard/support', icon: LucideLifeBuoy },
+  { name: 'Telegram Bot', path: '/dashboard/telegram', icon: LucideBot },
 ];
 
 export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {

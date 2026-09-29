@@ -210,21 +210,24 @@ export default function SettingsPage() {
             </div>
           </div>
           
-          {/* Telegram Bot Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-sm overflow-hidden text-white">
-            <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="flex-1 text-center sm:text-left">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-full mb-4">
-                  <LucideBot className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-xl font-bold mb-2">Want to Use Our Telegram Bot?</h2>
-                <p className="text-blue-100 text-sm max-w-md">Buy numbers and get SMS codes instantly on Telegram. Learn how to securely connect your account in 3 easy steps.</p>
+                    {/* Telegram Bot Setup */}
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
+              <LucideBot className="w-5 h-5 text-blue-500" />
+              <h2 className="font-bold text-zinc-900">Telegram Bot</h2>
+            </div>
+            <div className="p-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-50 rounded-full mb-3 text-blue-600">
+                <LucideBot className="w-6 h-6" />
               </div>
-              <div className="shrink-0 w-full sm:w-auto">
-                <a href="/dashboard/telegram" className="block w-full bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg text-sm text-center transition-colors shadow-sm">
-                  View Setup Guide
-                </a>
-              </div>
+              <h3 className="font-bold text-zinc-900 mb-1">Automated SMS Bot</h3>
+              <p className="text-xs text-zinc-500 mb-5">Buy numbers and get SMS codes instantly inside Telegram.</p>
+              <a 
+                href="/dashboard/telegram" 
+                className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors shadow-sm"
+              >
+                View Setup Guide
+              </a>
             </div>
           </div>
 
