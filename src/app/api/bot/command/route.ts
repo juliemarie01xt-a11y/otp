@@ -58,7 +58,7 @@ If you want to unlink it and connect a different account, type /unlink`
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://otp-three-liard.vercel.app/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
+                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://swiftotp.store/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
             });
         }
         return NextResponse.json({ success: true });
@@ -160,7 +160,7 @@ $${Number(profile.balance).toFixed(2)}`, parse_mode: 'HTML' });
                  const { data: deposit } = await supabaseAdmin.from('deposits').insert({ user_id: profile.id, amount: amount, status: 'PENDING' }).select('id').single();
                  if (deposit) {
                      const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
-                     const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+                     const host = request.headers.get('host') || 'swiftotp.store';
                      const protocol = host.includes('localhost') ? 'http' : 'https';
                      const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
                      const multiplier = 1.015 / 1.01; 
@@ -201,7 +201,7 @@ Click the button below to pay securely via Plisio.`,
           
           // Next.js requires absolute URL for fetch in API routes
           const headersList = request.headers;
-          const host = headersList.get('host') || 'otp-three-liard.vercel.app';
+          const host = headersList.get('host') || 'swiftotp.store';
           const protocol = host.includes('localhost') ? 'http' : 'https';
           const baseUrl = `${protocol}://${host}`;
           
@@ -344,7 +344,7 @@ Click the button below to pay securely via Plisio.`,
       // Handle Check OTP Button
       else if (data.startsWith('check_otp_')) {
         const fullActId = data.replace('check_otp_', '');
-        const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+        const host = request.headers.get('host') || 'swiftotp.store';
         const protocol = host.includes('localhost') ? 'http' : 'https';
         fetch(`${protocol}://${host}/api/vsim/status?id=${fullActId}`).catch(()=>{});
         await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '⏳ Checking for SMS...', show_alert: false });
@@ -376,7 +376,7 @@ Click the button below to pay securely via Plisio.`,
          const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
          const PLISIO_API_URL = 'https://api.plisio.net/api/v1';
          
-         const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+         const host = request.headers.get('host') || 'swiftotp.store';
          const protocol = host.includes('localhost') ? 'http' : 'https';
          const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
          
@@ -437,7 +437,7 @@ Click the button below to pay securely via Plisio.`,
          const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
          const PLISIO_API_URL = 'https://api.plisio.net/api/v1';
          
-         const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+         const host = request.headers.get('host') || 'swiftotp.store';
          const protocol = host.includes('localhost') ? 'http' : 'https';
          const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
          
@@ -652,7 +652,7 @@ Click the button below to pay securely via Plisio.`,
             await tgApi('sendMessage', { 
                 chat_id: chatId, 
                 parse_mode: 'HTML',
-                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://otp-three-liard.vercel.app/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
+                text: `👋 <b>Welcome to SwiftOTP!</b>\n\nTo start buying numbers directly from Telegram, you need to securely connect this chat to your website account.\n\n<b>How to link your account:</b>\n1️⃣ Copy your Telegram ID: <code>${chatId}</code>\n2️⃣ Open the <a href="https://swiftotp.store/dashboard/telegram">Telegram BOT Page</a> on our website\n3️⃣ Paste your ID into the secure Connection Status box and click Connect to Telegram!\n\n<i>You will receive a confirmation message here once successfully linked.</i>`
             });
         } else {
             await tgApi('sendMessage', { 

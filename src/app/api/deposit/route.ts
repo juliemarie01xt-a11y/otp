@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Build callback URL with ?json=true so Plisio sends JSON
-    const host = request.headers.get('host') || 'localhost:3000';
+    const host = request.headers.get('host') || 'swiftotp.store';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const callbackUrl = `${protocol}://${host}/api/webhooks/plisio?json=true`;
     const successUrl = `${protocol}://${host}/dashboard/success`;

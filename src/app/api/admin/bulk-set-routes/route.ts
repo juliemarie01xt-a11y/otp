@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       if (insError) throw insError;
     }
 
-    const host = request.headers.get('host') || 'localhost:3000';
+    const host = request.headers.get('host') || 'swiftotp.store';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     fetch(`${protocol}://${host}/api/cron/sync-prices`, {
       headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` }

@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, checked: 0 });
     }
 
-    const host = request.headers.get('host') || 'otp-three-liard.vercel.app';
+    const host = request.headers.get('host') || 'swiftotp.store';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
 
