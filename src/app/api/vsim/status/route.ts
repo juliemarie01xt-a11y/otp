@@ -1,4 +1,4 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -113,12 +113,12 @@ export async function GET(request: Request) {
                 const refundAmount = Number(updatedAct[0].cost);
                 const userId = updatedAct[0].user_id;
                 
-                // Add money back to user wallet
-                const { data: profile } = await supabaseAdmin.from('profiles').select('balance').eq('id', userId).single();
-                if (profile) {
-                    const newBalance = Number((Number(profile.balance) + refundAmount).toPrecision(12));
-                    await supabaseAdmin.from('profiles').update({ balance: newBalance }).eq('id', userId);
-                }
+                // ATOMIC REFUND: Use the SQL RPC to add money back securely
+                // Prevents race conditions that could erase concurrent crypto deposits
+                await supabaseAdmin.rpc('refund_balance', {
+                    p_user_id: userId,
+                    p_amount: refundAmount
+                });
             }
             return NextResponse.json({ status: 'CANCELLED' });
         }

@@ -36,6 +36,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid verification code. Please try again.' }, { status: 400 });
     }
 
+    // 2.5 Check if this Telegram ID is already linked to another account to prevent hijacking/collisions
+    const { data: existingLinked } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('telegram_id', telegramId)
+      .neq('id', userId)
+      .single();
+
+    if (existingLinked) {
+      return NextResponse.json({ error: 'This Telegram account is already linked to another user. Please unlink it first.' }, { status: 400 });
+    }
+
     // 3. OTP is valid! Link the Telegram ID and clear the OTP
     const { error } = await supabaseAdmin
       .from('profiles')

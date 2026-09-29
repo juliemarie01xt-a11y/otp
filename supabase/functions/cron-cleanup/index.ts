@@ -64,11 +64,12 @@ serve(async (req) => {
               .select();
 
             if (updatedAct && updatedAct.length > 0) {
-                const { data: profile } = await supabaseAdmin.from('profiles').select('balance').eq('id', activation.user_id).single();
-                if (profile) {
-                    const newBalance = Number((Number(profile.balance) + refundAmount).toPrecision(12));
-                    await supabaseAdmin.from('profiles').update({ balance: newBalance }).eq('id', activation.user_id);
-                }
+                // ATOMIC REFUND: Use the SQL RPC to add money back securely inside Postgres
+                // This prevents race conditions where concurrent deposits or purchases could be erased
+                await supabaseAdmin.rpc('refund_balance', {
+                    p_user_id: activation.user_id,
+                    p_amount: refundAmount
+                });
             }
             processedCount++;
         }
