@@ -179,11 +179,7 @@ export async function POST(request: Request) {
         if (profile.is_email_verified === false) {
             await tgApi('sendMessage', {
                 chat_id: chatId,
-                text: '⚠️ <b>Email Not Verified</b>
-
-You must verify your email address before using the bot.
-
-Please check your inbox/spam folder.',
+                text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
                     keyboard: [[{ text: '📧 Resend Verification' }]],
@@ -506,11 +502,7 @@ Click the button below to pay securely via Plisio.`,
         if (profile.is_email_verified === false) {
             await tgApi('sendMessage', {
                 chat_id: chatId,
-                text: '⚠️ <b>Email Not Verified</b>
-
-You must verify your email address before using the bot.
-
-Please check your inbox/spam folder.',
+                text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
                     keyboard: [[{ text: '📧 Resend Verification' }]],
@@ -628,11 +620,7 @@ Please check your inbox/spam folder.',
         if (profile.is_email_verified === false) {
             await tgApi('sendMessage', {
                 chat_id: chatId,
-                text: '⚠️ <b>Email Not Verified</b>
-
-You must verify your email address before using the bot.
-
-Please check your inbox/spam folder.',
+                text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
                     keyboard: [[{ text: '📧 Resend Verification' }]],
@@ -721,11 +709,7 @@ Please check your inbox/spam folder.',
         if (profile.is_email_verified === false) {
             await tgApi('sendMessage', {
                 chat_id: chatId,
-                text: '⚠️ <b>Email Not Verified</b>
-
-You must verify your email address before using the bot.
-
-Please check your inbox/spam folder.',
+                text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
                     keyboard: [[{ text: '📧 Resend Verification' }]],
@@ -802,11 +786,7 @@ Please check your inbox/spam folder.',
         if (profile.is_email_verified === false) {
             await tgApi('sendMessage', {
                 chat_id: chatId,
-                text: '⚠️ <b>Email Not Verified</b>
-
-You must verify your email address before using the bot.
-
-Please check your inbox/spam folder.',
+                text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
                     keyboard: [[{ text: '📧 Resend Verification' }]],
