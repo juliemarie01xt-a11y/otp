@@ -18,6 +18,7 @@ import {
 const MENU = [
   { name: 'Dashboard', path: '/dashboard', icon: LucideLayoutDashboard },
   { name: 'Buy Number', path: '/dashboard/buy', icon: LucideShoppingCart },
+  { name: 'Telegram Bot', path: '/dashboard/telegram', icon: LucideBot },
   { name: 'Recharge / Top-Up', path: '/dashboard/recharge', icon: LucideWallet },
   { name: 'Numbers', path: '/dashboard/history', icon: LucideList },
   { name: 'My Profile', path: '/dashboard/settings', icon: LucideSettings },
