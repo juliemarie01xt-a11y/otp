@@ -70,6 +70,19 @@ Please enter this ID on the website dashboard to link your account.`
 
 
     
+    // Handle /balance command
+    if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/balance') {
+        const chatId = update.message.chat.id;
+        const { data: profile } = await supabaseAdmin.from('profiles').select('balance').eq('telegram_id', chatId.toString()).single();
+        if (!profile) {
+            await tgApi('sendMessage', { chat_id: chatId, text: '❌ Your account is not linked. Please link it on the website first.' });
+        } else {
+            await tgApi('sendMessage', { chat_id: chatId, text: `💰 <b>Wallet Balance:</b>
+$${Number(profile.balance).toFixed(2)}`, parse_mode: 'HTML' });
+        }
+        return NextResponse.json({ success: true });
+    }
+
     // Handle /unlink command
     if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/unlink') {
       const chatId = update.message.chat.id;
