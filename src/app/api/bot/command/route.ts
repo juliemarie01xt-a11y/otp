@@ -82,7 +82,7 @@ If you want to unlink it and connect a different account, type /unlink`
            if (user && user.email) email = user.email;
         } catch (e) {}
 
-        const { data: activations } = await supabaseAdmin.from('activations').select('cost').eq('user_id', profile.id);
+        const { data: activations } = await supabaseAdmin.from('activations').select('cost').eq('user_id', profile.id).eq('status', 'COMPLETED');
         const totalNumbers = (activations || []).length;
         const totalSpent = (activations || []).reduce((sum, act) => sum + Number(act.cost || 0), 0);
 
