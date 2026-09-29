@@ -163,7 +163,7 @@ export async function POST(request: Request) {
         
         await tgApi('editMessageText', {
           chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
-          text: `? <b>Processing your purchase securely...</b>`
+          text: `⏳ <b>Processing your purchase securely...</b>`
         });
 
         const { data: rule } = await supabaseAdmin.from('routing_rules').select('*').eq('id', ruleId).single();
