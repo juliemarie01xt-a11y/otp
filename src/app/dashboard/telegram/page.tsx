@@ -156,7 +156,8 @@ export default function TelegramGuidePage() {
                     <input
                       type="text"
                       value={telegramId}
-                      onChange={(e) => setTelegramId(e.target.value)}
+                      onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ''))}
+                        maxLength={12}
                       placeholder="e.g., 8252822439"
                       className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
