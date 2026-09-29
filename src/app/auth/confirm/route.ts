@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     })
     
     if (!error) {
-      // redirect user to specified redirect URL or root of app
-      return NextResponse.redirect(new URL(`/${next.replace(/^\//, '')}`, request.url))
+      // Redirect to the beautiful success page instead of a hard flash to the dashboard
+      return NextResponse.redirect(new URL('/auth/success', request.url))
     }
     
     console.error("OTP Verification Error:", error)
