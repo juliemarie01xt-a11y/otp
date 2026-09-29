@@ -338,7 +338,7 @@ export async function POST(request: Request) {
              } else {
                 await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Failed to generate crypto invoice from gateway.' });
              }
-         } catch(e) {
+         } catch(e: any) {
              await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: `❌ Invoice Error: ${e.message}` });
          }
       }
