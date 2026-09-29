@@ -16,12 +16,9 @@ serve(async (req: Request) => {
     const tokenHash = email_data.token_hash;
     const siteUrl = email_data.site_url || 'https://swiftotp.store';
     
-    // Fix: We must construct the Verify URL using the Supabase URL, and we MUST include the ANON KEY
-    // otherwise the Supabase API Gateway blocks the browser redirect with "No API key found in request"
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    
-    const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${tokenHash}&type=${actionType}&redirect_to=${siteUrl}/dashboard&apikey=${anonKey}`;
+    // Redirect securely to our Next.js backend to perform verification
+    // This avoids Kong API Gateway issues with missing API keys in the browser
+    const verifyUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=${actionType}&next=/dashboard`;
 
     let subject = "Welcome to SwiftOTP";
     let title = "Verify your email";
