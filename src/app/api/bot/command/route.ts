@@ -821,6 +821,10 @@ Click the button below to pay securely via Plisio.`,
                 const { data: updatedAct } = await supabaseAdmin.from('activations').update({ status: 'CANCELLED' }).eq('vsim_activation_id', fullActId).eq('status', 'PENDING').select();
                 if (updatedAct && updatedAct.length > 0) {
                     await supabaseAdmin.rpc('refund_balance', { p_user_id: profile.id, p_amount: Number(activation.cost) });
+                    
+                    // Add a Hoarder Strike using the new Probability Engine!
+                    await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: profile.id, p_activation_id: fullActId });
+                    
                     await tgApi('editMessageText', { 
                       chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
                       text: `✅ <b>Number Cancelled</b>\n\nNumber: <code>+${activation.phone_number}</code>\nRefunded: <b>$${Number(activation.cost).toFixed(2)}</b>`
