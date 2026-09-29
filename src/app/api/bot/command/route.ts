@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       }
 
       // Fetch all unique internal_services that have active routes
-      const { data: routes } = await supabaseAdmin.from('routing_rules').select('internal_service').eq('is_active', true);
+      const { data: routes } = await supabaseAdmin.from('routing_rules').select('internal_service');
       const activeServices = Array.from(new Set((routes || []).map(r => r.internal_service)));
 
       if (activeServices.length === 0) {
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       // STEP A: Picked a Service -> Show Countries
       if (data.startsWith('buy_svc_')) {
         const svcCode = data.replace('buy_svc_', '');
-        const { data: routes } = await supabaseAdmin.from('routing_rules').select('country_id').eq('internal_service', svcCode).eq('is_active', true);
+        const { data: routes } = await supabaseAdmin.from('routing_rules').select('country_id').eq('internal_service', svcCode);
         const activeCountries = Array.from(new Set((routes || []).map(r => r.country_id)));
 
         const inline_keyboard = [];
@@ -120,7 +120,6 @@ export async function POST(request: Request) {
           .select('*')
           .eq('internal_service', svcCode)
           .eq('country_id', ctyCode)
-          .eq('is_active', true)
           .order('cached_wholesale_cost', { ascending: true });
 
         const inline_keyboard = [];
@@ -160,7 +159,7 @@ Choose your quality tier:`,
         });
 
         const { data: rule } = await supabaseAdmin.from('routing_rules').select('*').eq('id', ruleId).single();
-        if (!rule || !rule.is_active) {
+        if (!rule) {
            await tgApi('sendMessage', { chat_id: chatId, text: '? This route is no longer available.' });
            return NextResponse.json({ success: true });
         }
@@ -237,7 +236,7 @@ Cost: $${retailCost.toFixed(2)}
 
       // STEP D: Back button
       else if (data === 'buy_back') {
-         const { data: routes } = await supabaseAdmin.from('routing_rules').select('internal_service').eq('is_active', true);
+         const { data: routes } = await supabaseAdmin.from('routing_rules').select('internal_service');
          const activeServices = Array.from(new Set((routes || []).map(r => r.internal_service)));
          const inline_keyboard = [];
          let row = [];
