@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare } from 'lucide-react';
 
 const FEED_SERVICES = [
@@ -188,6 +189,17 @@ const TESTIMONIALS = [
 ];
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-50 font-[family-name:var(--font-geist-sans)]">
       {/* ── Navigation ───────────────────────────────────────── */}
@@ -200,18 +212,29 @@ export default function HomePage() {
             <span className="font-bold text-zinc-900 text-lg tracking-tight">SwiftOTP</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-semibold hover:bg-zinc-800 transition-colors"
-            >
-              Get started
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-semibold hover:bg-zinc-800 transition-colors"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-semibold hover:bg-zinc-800 transition-colors"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
