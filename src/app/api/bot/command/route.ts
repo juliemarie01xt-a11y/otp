@@ -818,7 +818,7 @@ Click the button below to pay securely via Plisio.`,
             const result = await res.text();
             
             if (result === 'ACCESS_CANCEL' || result === 'ACCESS_CANCEL_ALREADY' || result === 'BAD_STATUS' || result === 'NO_ACTIVATION' || result === 'ACCESS_APPROVED') {
-                const { data: updatedAct } = await supabaseAdmin.from('activations').update({ status: 'CANCELLED' }).eq('vsim_activation_id', fullActId).eq('status', 'PENDING').select();
+                const { data: updatedAct } = await supabaseAdmin.from('activations').update({ status: 'CANCELLED', cancelled_at: new Date().toISOString() }).eq('vsim_activation_id', fullActId).eq('status', 'PENDING').select();
                 if (updatedAct && updatedAct.length > 0) {
                     await supabaseAdmin.rpc('refund_balance', { p_user_id: profile.id, p_amount: Number(activation.cost) });
                     

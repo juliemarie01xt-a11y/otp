@@ -83,7 +83,7 @@ export async function POST(request: Request) {
             // If it's already CANCELLED, this returns empty, preventing double-refunds in a race condition.
             const { data: updatedAct } = await supabaseAdmin
               .from('activations')
-              .update({ status: 'CANCELLED' })
+              .update({ status: 'CANCELLED', cancelled_at: new Date().toISOString() })
               .eq('vsim_activation_id', id.toString())
               .eq('status', 'PENDING')
               .select();
