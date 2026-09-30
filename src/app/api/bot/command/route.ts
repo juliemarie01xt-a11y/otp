@@ -97,6 +97,12 @@ export async function POST(request: Request) {
                         return NextResponse.json({ success: true });
                     }
 
+                    if (data?.user?.identities?.length === 0) {
+                        await tgApi('sendMessage', { chat_id: chatId, text: `❌ This email is already registered.\n\nPlease type /create to try a different email.` });
+                        await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
+                        return NextResponse.json({ success: true });
+                    }
+
                     // Clean up session
                     await supabaseAdmin.from('bot_sessions').delete().eq('telegram_id', chatId);
                     
