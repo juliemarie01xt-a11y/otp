@@ -14,6 +14,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 });
     }
 
+    let telegramId = null;
+    try {
+      const body = await request.json();
+      telegramId = body.telegramId;
+    } catch (e) {
+      // Ignored for backwards compatibility if needed, but expected now
+    }
+
+    if (telegramId) {
+      // Prevent OTP if this Telegram ID is already linked
+      const { data: existingLinked } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('telegram_id', telegramId)
+        .neq('id', userId)
+        .single();
+        
+      if (existingLinked) {
+        return NextResponse.json({ error: 'This Telegram account is already linked to another user. Please unlink it first.' }, { status: 400 });
+      }
+    }
+
     // 1. Get the user's email from Supabase Auth
     const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (userError || !user || !user.email) {

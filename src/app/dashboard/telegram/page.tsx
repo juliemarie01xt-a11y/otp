@@ -54,7 +54,8 @@ export default function TelegramGuidePage() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
-        }
+        },
+        body: JSON.stringify({ telegramId })
       });
       const data = await res.json();
       if (data.success) {
