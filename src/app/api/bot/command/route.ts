@@ -762,6 +762,40 @@ Click the button below to pay securely via Plisio.`,
          }
       }
 
+        // Handle Resend Verification Inline Button
+        if (data === 'resend_verify') {
+          const { data: profile } = await supabaseAdmin.from('profiles').select('id, is_email_verified, last_resend_at, is_banned').eq('telegram_id', chatId.toString()).single();
+          if (!profile) return NextResponse.json({ success: true });
+
+          if (profile.is_email_verified) {
+             await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '✅ Your email is already verified!', show_alert: true });
+             return NextResponse.json({ success: true });
+          }
+
+          const now = new Date();
+          const lastResend = profile.last_resend_at ? new Date(profile.last_resend_at) : new Date(0);
+          const diffMs = now.getTime() - lastResend.getTime();
+
+          if (diffMs < 60000) {
+             const secondsLeft = Math.ceil((60000 - diffMs) / 1000);
+             await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: `⏳ Please wait ${secondsLeft} seconds before requesting another email.`, show_alert: true });
+             return NextResponse.json({ success: true });
+          }
+
+          try {
+              const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+              if (user && user.email) {
+                  const { error } = await supabaseAdmin.auth.resend({ type: 'signup', email: user.email });
+                  if (error) throw error;
+                  await supabaseAdmin.from('profiles').update({ last_resend_at: new Date().toISOString() }).eq('id', profile.id);
+                  await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '✅ Verification email resent! Please check your inbox.', show_alert: true });
+              }
+          } catch(e) {
+              await tgApi('answerCallbackQuery', { callback_query_id: update.callback_query.id, text: '❌ Failed to resend email.', show_alert: true });
+          }
+          return NextResponse.json({ success: true });
+        }
+
       // Handle Cancel Action Button
       else if (data.startsWith('cancel_act_')) {
         const fullActId = data.replace('cancel_act_', '');
