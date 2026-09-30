@@ -23,15 +23,25 @@ export async function POST(request: Request) {
     }
 
     if (telegramId) {
-      // Prevent OTP if this Telegram ID is already linked
+      // Prevent OTP if the current user is already linked
+      const { data: currentUser } = await supabaseAdmin
+        .from('profiles')
+        .select('telegram_id')
+        .eq('id', userId)
+        .single();
+        
+      if (currentUser?.telegram_id) {
+         return NextResponse.json({ error: 'Your account is already linked to a Telegram ID. Please unlink first.' }, { status: 400 });
+      }
+
+      // Prevent OTP if this Telegram ID is already linked to ANY user
       const { data: existingLinked } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('telegram_id', telegramId)
-        .neq('id', userId)
-        .single();
+        .limit(1);
         
-      if (existingLinked) {
+      if (existingLinked && existingLinked.length > 0) {
         return NextResponse.json({ error: 'This Telegram account is already linked to another user. Please unlink it first.' }, { status: 400 });
       }
     }

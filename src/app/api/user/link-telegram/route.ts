@@ -42,9 +42,9 @@ export async function POST(request: Request) {
       .select('id')
       .eq('telegram_id', telegramId)
       .neq('id', userId)
-      .single();
+      .limit(1);
 
-    if (existingLinked) {
+    if (existingLinked && existingLinked.length > 0) {
       return NextResponse.json({ error: 'This Telegram account is already linked to another user. Please unlink it first.' }, { status: 400 });
     }
 
