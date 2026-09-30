@@ -94,7 +94,10 @@ export async function POST(request: Request) {
       .from('deposits')
       .update({
         status: 'COMPLETED',
-        txn_id: data.txn_id || 'plisio'
+        txn_id: data.txn_id || 'plisio',
+        currency: data.currency || 'UNKNOWN',
+        crypto_amount: Number(data.amount) || 0,
+        invoice_status: data.status
       })
       .eq('id', orderId)
       .eq('status', 'PENDING')

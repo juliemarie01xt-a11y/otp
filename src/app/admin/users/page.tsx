@@ -14,6 +14,7 @@ export default function AdminUsersPage() {
   const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
   const [notes, setNotes] = useState('');
+  const [profileTab, setProfileTab] = useState('logs');
 
   useEffect(() => {
     fetchUsers();
@@ -59,13 +60,14 @@ export default function AdminUsersPage() {
   };
 
   const openMasterProfile = async (u: any) => {
-    setSelectedUser({ ...u, logs: [] });
+    setSelectedUser({ ...u, logs: [], deposits: [] });
+    setProfileTab('logs');
     setNotes(u.admin_notes || '');
     setLogsModalOpen(true);
     setLogsLoading(true);
     try {
       const res = await axios.get('/api/admin/users/logs?userId=' + u.id);
-      setSelectedUser({ ...u, logs: res.data.logs || [] });
+      setSelectedUser({ ...u, logs: res.data.logs || [], deposits: res.data.deposits || [] });
     } catch (err: any) {
       alert('Failed to load logs: ' + err.message);
     } finally {
@@ -129,42 +131,100 @@ export default function AdminUsersPage() {
 
               {/* Activity Log */}
               <div>
-                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><LucideActivity className="w-5 h-5 text-indigo-500"/> Raw Activation Log</h3>
+                <div className="flex items-center gap-4 mb-4 pb-2 border-b border-slate-800">
+                  <button 
+                    onClick={() => setProfileTab('logs')}
+                    className={`text-lg font-bold flex items-center gap-2 px-2 py-1 ${profileTab === 'logs' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <LucideActivity className="w-5 h-5"/> Activation Logs
+                  </button>
+                  <button 
+                    onClick={() => setProfileTab('deposits')}
+                    className={`text-lg font-bold flex items-center gap-2 px-2 py-1 ${profileTab === 'deposits' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <LucideActivity className="w-5 h-5"/> Transactions
+                  </button>
+                </div>
                 <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
                   {logsLoading ? (
                     <div className="text-center p-12 text-slate-500 flex flex-col items-center">
                       <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                       Fetching complete history...
                     </div>
-                  ) : selectedUser?.logs?.length === 0 ? (
-                    <div className="text-center p-8 text-slate-500">No purchases yet.</div>
-                  ) : (
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-900 text-slate-400">
-                        <tr>
-                          <th className="p-3">Service</th>
-                          <th className="p-3">Number</th>
-                          <th className="p-3">Status</th>
-                          <th className="p-3">Created At</th>
-                          <th className="p-3">Cancelled At</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/50">
-                        {selectedUser?.logs?.map((log: any) => (
-                          <tr key={log.id} className="hover:bg-slate-800/20">
-                            <td className="p-3 font-medium text-slate-300">{log.service || 'Unknown'}</td>
-                            <td className="p-3 font-mono text-slate-300">+{log.phone_number || 'Pending'}</td>
-                            <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${log.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : log.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                                {log.status}
-                              </span>
-                            </td>
-                            <td className="p-3 text-slate-400 text-xs">{new Date(log.created_at).toLocaleString()}</td>
-                            <td className="p-3 text-red-400 text-xs font-medium">{log.cancelled_at ? new Date(log.cancelled_at).toLocaleString() : '-'}</td>
+                  ) : profileTab === 'logs' ? (
+                     selectedUser?.logs?.length === 0 ? (
+                      <div className="text-center p-8 text-slate-500">No purchases yet.</div>
+                    ) : (
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-900 text-slate-400">
+                          <tr>
+                            <th className="p-3">Service</th>
+                            <th className="p-3">Number</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">Created At</th>
+                            <th className="p-3">Cancelled At</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                          {selectedUser?.logs?.map((log: any) => (
+                            <tr key={log.id} className="hover:bg-slate-800/20">
+                              <td className="p-3 font-medium text-slate-300">{log.service || 'Unknown'}</td>
+                              <td className="p-3 font-mono text-slate-300">+{log.phone_number || 'Pending'}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${log.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : log.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                  {log.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-slate-400 text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                              <td className="p-3 text-red-400 text-xs font-medium">{log.cancelled_at ? new Date(log.cancelled_at).toLocaleString() : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )
+                  ) : (
+                    selectedUser?.deposits?.length === 0 ? (
+                      <div className="text-center p-8 text-slate-500">No transactions yet.</div>
+                    ) : (
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-900 text-slate-400">
+                          <tr>
+                            <th className="p-3">Txn ID</th>
+                            <th className="p-3">Requested ($)</th>
+                            <th className="p-3">Crypto Paid</th>
+                            <th className="p-3">Credited ($)</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                          {selectedUser?.deposits?.map((dep: any) => (
+                            <tr key={dep.id} className="hover:bg-slate-800/20">
+                              <td className="p-3 font-mono text-slate-400 text-xs">{dep.txn_id || dep.id.split('-')[0] + '...'}</td>
+                              <td className="p-3 text-slate-300 font-medium">${Number(dep.amount).toFixed(2)}</td>
+                              <td className="p-3">
+                                {dep.currency ? <span className="font-bold text-blue-400">{dep.crypto_amount} {dep.currency}</span> : <span className="text-slate-500">-</span>}
+                              </td>
+                              <td className="p-3">
+                                {dep.usd_credit ? <span className="font-bold text-emerald-400">${Number(dep.usd_credit).toFixed(2)}</span> : <span className="text-slate-500">-</span>}
+                              </td>
+                              <td className="p-3">
+                                {dep.status === 'COMPLETED' ? (
+                                  <div className="flex flex-col">
+                                    <span className="text-emerald-500 font-bold text-xs">COMPLETED</span>
+                                    {dep.invoice_status === 'mismatch' && <span className="text-amber-500 text-[10px]">(mismatch)</span>}
+                                    {dep.invoice_status === 'expired' && <span className="text-amber-500 text-[10px]">(partial)</span>}
+                                  </div>
+                                ) : (
+                                  <span className="text-amber-500 font-bold text-xs">{dep.status}</span>
+                                )}
+                              </td>
+                              <td className="p-3 text-slate-400 text-xs">{new Date(dep.created_at).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )
                   )}
                 </div>
               </div>
