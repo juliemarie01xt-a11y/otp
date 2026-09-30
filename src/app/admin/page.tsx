@@ -176,6 +176,9 @@ export default function AdminPage() {
               <p className="text-sm text-slate-400 font-medium">Configure global routing algorithms</p>
             </div>
           </div>
+          <a href="/admin/users" className="flex items-center gap-2 bg-slate-800 text-slate-300 px-4 py-2 rounded-lg font-bold hover:bg-slate-700 transition">
+             Manage Users
+          </a>
         </div>
       </div>
 
