@@ -460,18 +460,56 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────── */}
-      <footer className="max-w-5xl mx-auto px-5 pb-10">
-        <div className="border-t border-zinc-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-zinc-900 rounded-md flex items-center justify-center">
-              <LucideShield className="w-3 h-3 text-white" />
+      <footer className="bg-zinc-950 pt-20 pb-10 border-t border-zinc-900 mt-20">
+        <div className="max-w-5xl mx-auto px-5">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center gap-2.5 mb-6">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-md">
+                  <LucideShield className="w-5 h-5 text-zinc-900" />
+                </div>
+                <span className="font-bold text-white text-xl tracking-tight">SwiftOTP</span>
+              </div>
+              <p className="text-zinc-400 text-sm leading-relaxed max-w-sm mb-8">
+                The fastest, most reliable virtual numbers for SMS verification. Powered by crypto, fully automated, and perfectly integrated with Telegram.
+              </p>
+              <div className="flex items-center gap-4">
+                <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all shadow-lg hover:-translate-y-1">
+                   <LucideMessageSquare className="w-4 h-4" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all shadow-lg hover:-translate-y-1">
+                   <LucideGlobe className="w-4 h-4" />
+                </a>
+              </div>
             </div>
-            <span className="text-sm font-bold text-zinc-400">SwiftOTP</span>
+            
+            <div>
+              <h3 className="font-bold text-white mb-6">Platform</h3>
+              <ul className="space-y-4 text-sm">
+                <li><Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href="/deposit" className="text-zinc-400 hover:text-white transition-colors">Deposit Crypto</Link></li>
+                <li><Link href="/login" className="text-zinc-400 hover:text-white transition-colors">Log In</Link></li>
+                <li><Link href="/signup" className="text-zinc-400 hover:text-white transition-colors">Create Account</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-white mb-6">Support</h3>
+              <ul className="space-y-4 text-sm">
+                <li><a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">Telegram Bot</a></li>
+                <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/admin" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-900"><LucideLock className="w-3.5 h-3.5"/> Admin Area</Link></li>
+              </ul>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-sm font-medium text-zinc-400">
-            <Link href="/dashboard" className="hover:text-zinc-600 transition-colors">Dashboard</Link>
-            <Link href="/deposit" className="hover:text-zinc-600 transition-colors">Deposit</Link>
-            <a href="/admin" className="hover:text-zinc-600 transition-colors">Admin Area</a>
+          
+          <div className="pt-8 border-t border-zinc-900 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-zinc-500 text-sm font-medium">© {new Date().getFullYear()} SwiftOTP. All rights reserved.</p>
+            <div className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+              <span className="text-zinc-400 text-xs font-bold uppercase tracking-wider">All systems operational</span>
+            </div>
           </div>
         </div>
       </footer>
