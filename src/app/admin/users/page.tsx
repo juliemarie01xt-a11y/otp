@@ -75,6 +75,7 @@ export default function AdminUsersPage() {
                 <tr>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">User ID / Telegram</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Balance</th>
+                  <th className="p-4 font-bold uppercase tracking-wider text-xs">Activity</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Trust Score</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Status</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
@@ -100,6 +101,22 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-4 font-mono font-medium text-emerald-400">
                       ${Number(u.balance || 0).toFixed(2)}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">Success:</span>
+                          <span className="text-emerald-400 font-bold">{u.total_completed || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">Cancels:</span>
+                          <span className="text-red-400 font-bold">{u.total_cancels || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">24h Cancels:</span>
+                          <span className="text-amber-400 font-bold">{u.recent_cancels_24h || 0}</span>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
