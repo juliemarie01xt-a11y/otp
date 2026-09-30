@@ -90,18 +90,18 @@ export async function POST(request: Request) {
     // 5. ATOMIC LOCK: Update the pending deposit to COMPLETED.
     //    By filtering on status = 'PENDING', this guarantees the credit
     //    happens exactly ONCE even if Plisio fires duplicate webhooks.
-        let realTxId = data.txn_id;
-    if (!realTxId && typeof data.tx_url === 'string') {
-        realTxId = data.tx_url.split('/').pop();
-    } else if (!realTxId && data.tx_urls) {
+    // Store the full explorer URL if available, otherwise fallback to Plisio internal ID
+    let realTxId = data.txn_id || 'unknown_hash';
+    if (data.tx_url && typeof data.tx_url === 'string') {
+        realTxId = data.tx_url;
+    } else if (data.tx_urls) {
         try {
             const urls = typeof data.tx_urls === 'string' ? JSON.parse(data.tx_urls) : data.tx_urls;
             if (Array.isArray(urls) && urls.length > 0) {
-                realTxId = urls[urls.length - 1].split('/').pop();
+                realTxId = urls[urls.length - 1];
             }
         } catch(e) {}
     }
-    if (!realTxId) realTxId = 'unknown_hash';
 
     let addedAmountTemp = Number(amountPaidStr) / (1.015 / 1.01);
     addedAmountTemp = Number(addedAmountTemp.toFixed(4));

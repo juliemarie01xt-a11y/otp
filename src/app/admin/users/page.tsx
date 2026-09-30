@@ -225,7 +225,15 @@ export default function AdminUsersPage() {
                         <tbody className="divide-y divide-slate-800/50">
                           {selectedUser?.deposits?.map((dep: any) => (
                             <tr key={dep.id} className="hover:bg-slate-800/20">
-                              <td className="p-3 font-mono text-slate-400 text-[10px] break-all max-w-[120px]">{dep.txn_id || dep.id.split('-')[0] + '...'}</td>
+                              <td className="p-3 font-mono text-slate-400 text-[10px] break-all max-w-[120px]">
+                                {dep.txn_id?.startsWith('http') ? (
+                                  <a href={dep.txn_id} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline inline-block">
+                                    {dep.txn_id.split('/').pop()?.substring(0, 16)}...
+                                  </a>
+                                ) : (
+                                  dep.txn_id || dep.id.split('-')[0] + '...'
+                                )}
+                              </td>
                               <td className="p-3 font-mono text-slate-400 text-[10px] break-all max-w-[120px]">{dep.payment_wallet || '-'}</td>
                               <td className="p-3 text-slate-300 font-medium">${Number(dep.amount).toFixed(2)}</td>
                               <td className="p-3">
