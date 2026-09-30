@@ -19,15 +19,23 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await axios.get('/api/admin/users');
       setUsers(res.data.users || []);
+      
+      // Update selected user if modal is open to reflect new bans/trust instantly
+      setSelectedUser((prev: any) => {
+        if (!prev) return prev;
+        const updated = res.data.users?.find((u: any) => u.id === prev.id);
+        return updated ? { ...updated, logs: prev.logs } : prev;
+      });
+      
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -38,7 +46,7 @@ export default function AdminUsersPage() {
 
     try {
       await axios.post('/api/admin/users/action', { userId, action, reason });
-      await fetchUsers();
+      await fetchUsers(true);
       
       // Update selected user state if modal is open
       if (selectedUser && selectedUser.id === userId && action === 'update_notes') {
@@ -180,7 +188,7 @@ export default function AdminUsersPage() {
               <p className="text-sm text-slate-400 font-medium">Master Dashboard</p>
             </div>
           </div>
-          <button onClick={fetchUsers} className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-700">
+          <button onClick={() => fetchUsers(false)} className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-700">
             <LucideRefreshCcw className="w-4 h-4" /> Refresh
           </button>
         </div>
