@@ -182,7 +182,7 @@ export async function POST(request: Request) {
         }
 
         // Block if not verified
-        if (profile.is_email_verified === false) {
+        if (profile.is_email_verified === false && update.callback_query?.data !== 'resend_verify' && update.message?.text?.trim() !== '🔄 Resend Verification') {
             await tgApi('sendMessage', {
                 chat_id: chatId,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
@@ -503,7 +503,7 @@ Click the button below to pay securely via Plisio.`,
         }
 
         // Block if not verified
-        if (profile.is_email_verified === false) {
+        if (profile.is_email_verified === false && update.callback_query?.data !== 'resend_verify' && update.message?.text?.trim() !== '🔄 Resend Verification') {
             await tgApi('sendMessage', {
                 chat_id: chatId,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
@@ -619,7 +619,7 @@ Click the button below to pay securely via Plisio.`,
         }
 
         // Block if not verified
-        if (profile.is_email_verified === false) {
+        if (profile.is_email_verified === false && update.callback_query?.data !== 'resend_verify' && update.message?.text?.trim() !== '🔄 Resend Verification') {
             await tgApi('sendMessage', {
                 chat_id: chatId,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
@@ -706,7 +706,7 @@ Click the button below to pay securely via Plisio.`,
         }
 
         // Block if not verified
-        if (profile.is_email_verified === false) {
+        if (profile.is_email_verified === false && update.callback_query?.data !== 'resend_verify' && update.message?.text?.trim() !== '🔄 Resend Verification') {
             await tgApi('sendMessage', {
                 chat_id: chatId,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
@@ -781,7 +781,7 @@ Click the button below to pay securely via Plisio.`,
         }
 
         // Block if not verified
-        if (profile.is_email_verified === false) {
+        if (profile.is_email_verified === false && update.callback_query?.data !== 'resend_verify' && update.message?.text?.trim() !== '🔄 Resend Verification') {
             await tgApi('sendMessage', {
                 chat_id: chatId,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
