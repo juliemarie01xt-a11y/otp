@@ -30,6 +30,13 @@ export async function POST(request: Request) {
         .eq('id', userId);
       if (error) throw error;
     }
+    else if (action === 'update_notes') {
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ admin_notes: reason }) // we overload 'reason' as the note text
+        .eq('id', userId);
+      if (error) throw error;
+    }
     else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

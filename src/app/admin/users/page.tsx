@@ -1,32 +1,19 @@
 "use client";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LucideShield, LucideUsers, LucideBan, LucideRefreshCcw, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideArrowLeft } from 'lucide-react';
+import { LucideShield, LucideUsers, LucideBan, LucideRefreshCcw, LucideActivity, LucideCheckCircle2, LucideXCircle, LucideArrowLeft, LucideSearch, LucideMail, LucideFileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
-  const [selectedUserLogs, setSelectedUserLogs] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
-
-  const handleViewLogs = async (userId: string) => {
-    setSelectedUserLogs({ id: userId, logs: [] });
-    setLogsModalOpen(true);
-    setLogsLoading(true);
-    try {
-      const res = await axios.get('/api/admin/users/logs?userId=' + userId);
-      setSelectedUserLogs({ id: userId, logs: res.data.logs || [] });
-    } catch (err: any) {
-      alert('Failed to load logs: ' + err.message);
-    } finally {
-      setLogsLoading(false);
-    }
-  };
-
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -52,59 +39,127 @@ export default function AdminUsersPage() {
     try {
       await axios.post('/api/admin/users/action', { userId, action, reason });
       await fetchUsers();
+      
+      // Update selected user state if modal is open
+      if (selectedUser && selectedUser.id === userId && action === 'update_notes') {
+         setSelectedUser({...selectedUser, admin_notes: reason});
+         alert('Notes saved successfully!');
+      }
     } catch (err: any) {
       alert('Action failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
+  const openMasterProfile = async (u: any) => {
+    setSelectedUser({ ...u, logs: [] });
+    setNotes(u.admin_notes || '');
+    setLogsModalOpen(true);
+    setLogsLoading(true);
+    try {
+      const res = await axios.get('/api/admin/users/logs?userId=' + u.id);
+      setSelectedUser({ ...u, logs: res.data.logs || [] });
+    } catch (err: any) {
+      alert('Failed to load logs: ' + err.message);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(u => 
+    (u.email || '').toLowerCase().includes(search.toLowerCase()) || 
+    (u.telegram_id || '').includes(search) ||
+    u.id.includes(search)
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-32">
-      {logsModalOpen && (
+      {logsModalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2"><LucideActivity className="w-5 h-5 text-blue-500"/> Activity Logs</h2>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><LucideMail className="w-5 h-5 text-blue-500"/> {selectedUser.email}</h2>
+                <div className="text-xs text-slate-500 font-mono mt-1">{selectedUser.id}</div>
+              </div>
               <button onClick={() => setLogsModalOpen(false)} className="text-slate-500 hover:text-white">
-                <LucideXCircle className="w-6 h-6" />
+                <LucideXCircle className="w-8 h-8" />
               </button>
             </div>
-            <div className="p-4 max-h-[70vh] overflow-y-auto">
-              {logsLoading ? (
-                <div className="text-center p-12 text-slate-500 flex flex-col items-center">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                  Loading precise timestamps...
+            
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Top Stats Grid */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Wallet Balance</div>
+                  <div className="text-2xl font-black text-emerald-400">${Number(selectedUser.balance || 0).toFixed(2)}</div>
                 </div>
-              ) : selectedUserLogs?.logs?.length === 0 ? (
-                <div className="text-center p-8 text-slate-500">No logs found for this user.</div>
-              ) : (
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-950 text-slate-400">
-                    <tr>
-                      <th className="p-3 rounded-tl-lg">Service</th>
-                      <th className="p-3">Number</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3">Created At</th>
-                      <th className="p-3 rounded-tr-lg">Cancelled At</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/50">
-                    {selectedUserLogs?.logs?.map((log: any) => (
-                      <tr key={log.id} className="hover:bg-slate-800/20">
-                        <td className="p-3 font-medium text-slate-300">{log.service || 'Unknown'}</td>
-                        <td className="p-3 font-mono text-slate-300">+{log.phone_number || 'Pending'}</td>
-                        <td className="p-3">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${log.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : log.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                            {log.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-400 text-xs">{new Date(log.created_at).toLocaleString()}</td>
-                        <td className="p-3 text-red-400 text-xs font-medium">{log.cancelled_at ? new Date(log.cancelled_at).toLocaleString() : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Trust Score</div>
+                  <div className={`text-2xl font-black ${selectedUser.trust_score >= 50 ? 'text-emerald-400' : selectedUser.trust_score >= 20 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {selectedUser.trust_score || 0}
+                  </div>
+                </div>
+                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Success Rate</div>
+                  <div className="text-2xl font-black text-blue-400">{selectedUser.success_rate || 0}%</div>
+                </div>
+              </div>
+
+              {/* Admin Notes */}
+              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
+                 <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 font-bold text-slate-300"><LucideFileText className="w-4 h-4"/> Admin Notes & Reports</div>
+                    <button onClick={() => handleAction(selectedUser.id, 'update_notes', notes)} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold">Save Notes</button>
+                 </div>
+                 <textarea 
+                    value={notes} 
+                    onChange={e => setNotes(e.target.value)} 
+                    placeholder="Add notes about this user, spam reports, or ban reasons..."
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500 min-h-[100px]"
+                 />
+              </div>
+
+              {/* Activity Log */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><LucideActivity className="w-5 h-5 text-indigo-500"/> Raw Activation Log</h3>
+                <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                  {logsLoading ? (
+                    <div className="text-center p-12 text-slate-500 flex flex-col items-center">
+                      <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      Fetching complete history...
+                    </div>
+                  ) : selectedUser?.logs?.length === 0 ? (
+                    <div className="text-center p-8 text-slate-500">No purchases yet.</div>
+                  ) : (
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-900 text-slate-400">
+                        <tr>
+                          <th className="p-3">Service</th>
+                          <th className="p-3">Number</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3">Created At</th>
+                          <th className="p-3">Cancelled At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/50">
+                        {selectedUser?.logs?.map((log: any) => (
+                          <tr key={log.id} className="hover:bg-slate-800/20">
+                            <td className="p-3 font-medium text-slate-300">{log.service || 'Unknown'}</td>
+                            <td className="p-3 font-mono text-slate-300">+{log.phone_number || 'Pending'}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${log.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : log.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                {log.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-400 text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                            <td className="p-3 text-red-400 text-xs font-medium">{log.cancelled_at ? new Date(log.cancelled_at).toLocaleString() : '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -112,7 +167,7 @@ export default function AdminUsersPage() {
 
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 p-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link href="/admin" className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition">
               <LucideArrowLeft className="w-5 h-5 text-slate-300" />
@@ -122,12 +177,24 @@ export default function AdminUsersPage() {
             </div>
             <div>
               <h1 className="text-xl font-black text-white tracking-tight">User Management</h1>
-              <p className="text-sm text-slate-400 font-medium">Manage bans, trust scores, and abuse</p>
+              <p className="text-sm text-slate-400 font-medium">Master Dashboard</p>
             </div>
           </div>
           <button onClick={fetchUsers} className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-700">
             <LucideRefreshCcw className="w-4 h-4" /> Refresh
           </button>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="max-w-6xl mx-auto relative">
+           <LucideSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+           <input 
+             type="text"
+             placeholder="Search users by Email, Telegram ID, or UUID..."
+             value={search}
+             onChange={e => setSearch(e.target.value)}
+             className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500 shadow-inner"
+           />
         </div>
       </div>
 
@@ -143,7 +210,7 @@ export default function AdminUsersPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-950/50 border-b border-slate-800 text-slate-400">
                 <tr>
-                  <th className="p-4 font-bold uppercase tracking-wider text-xs">User ID / Telegram</th>
+                  <th className="p-4 font-bold uppercase tracking-wider text-xs">User (Email)</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Balance</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Activity</th>
                   <th className="p-4 font-bold uppercase tracking-wider text-xs">Trust Score</th>
@@ -153,20 +220,22 @@ export default function AdminUsersPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/50">
                 {loading ? (
-                  <tr><td colSpan={5} className="p-8 text-center text-slate-500">Loading users...</td></tr>
-                ) : users.length === 0 ? (
-                  <tr><td colSpan={5} className="p-8 text-center text-slate-500">No users found.</td></tr>
-                ) : users.map(u => (
+                  <tr><td colSpan={6} className="p-8 text-center text-slate-500">Loading users...</td></tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-slate-500">No users found.</td></tr>
+                ) : filteredUsers.map(u => (
                   <tr key={u.id} className="hover:bg-slate-800/20 transition">
                     <td className="p-4">
-                      <div className="font-mono text-xs text-slate-500 mb-1">{u.id}</div>
+                      <button onClick={() => openMasterProfile(u)} className="text-left font-bold text-white hover:text-blue-400 transition mb-1 flex items-center gap-2">
+                        {u.email}
+                      </button>
                       <div className="flex items-center gap-2 text-slate-300 font-medium">
                         {u.telegram_id ? (
                           <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded text-xs border border-blue-500/20">TG: {u.telegram_id}</span>
                         ) : (
                           <span className="text-slate-600 text-xs italic">Unlinked</span>
                         )}
-                        {u.is_email_verified && <LucideCheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                        {u.is_email_verified && <span title="Email Verified"><LucideCheckCircle2 className="w-4 h-4 text-emerald-500" /></span>}
                       </div>
                     </td>
                     <td className="p-4 font-mono font-medium text-emerald-400">
@@ -175,8 +244,8 @@ export default function AdminUsersPage() {
                     <td className="p-4">
                       <div className="flex flex-col gap-1 text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-500">Success:</span>
-                          <span className="text-emerald-400 font-bold">{u.total_completed || 0}</span>
+                          <span className="text-slate-500">Rate:</span>
+                          <span className="text-blue-400 font-bold">{u.success_rate || 0}%</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">Cancels:</span>
@@ -217,16 +286,14 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-
                         <button 
-                          onClick={() => handleViewLogs(u.id)}
+                          onClick={() => openMasterProfile(u)}
                           className="px-3 py-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded hover:bg-blue-600/40 text-xs font-bold transition"
                         >
-                          Logs
+                          Profile
                         </button>
                         <button 
                           onClick={() => handleAction(u.id, 'reset_trust')}
-}
                           className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 text-xs font-medium transition"
                         >
                           Reset Trust
