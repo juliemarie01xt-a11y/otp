@@ -188,9 +188,7 @@ export async function POST(request: Request) {
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
-                    keyboard: [[{ text: '📧 Resend Verification' }]],
-                    resize_keyboard: true,
-                    one_time_keyboard: false
+                    inline_keyboard: [[{ text: '🔄 Resend Verification', callback_data: 'resend_verify' }]]
                 }
             });
             return NextResponse.json({ success: true });
@@ -511,9 +509,7 @@ Click the button below to pay securely via Plisio.`,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
-                    keyboard: [[{ text: '📧 Resend Verification' }]],
-                    resize_keyboard: true,
-                    one_time_keyboard: false
+                    inline_keyboard: [[{ text: '🔄 Resend Verification', callback_data: 'resend_verify' }]]
                 }
             });
             return NextResponse.json({ success: true });
@@ -629,9 +625,7 @@ Click the button below to pay securely via Plisio.`,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
-                    keyboard: [[{ text: '📧 Resend Verification' }]],
-                    resize_keyboard: true,
-                    one_time_keyboard: false
+                    inline_keyboard: [[{ text: '🔄 Resend Verification', callback_data: 'resend_verify' }]]
                 }
             });
             return NextResponse.json({ success: true });
@@ -718,9 +712,7 @@ Click the button below to pay securely via Plisio.`,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
-                    keyboard: [[{ text: '📧 Resend Verification' }]],
-                    resize_keyboard: true,
-                    one_time_keyboard: false
+                    inline_keyboard: [[{ text: '🔄 Resend Verification', callback_data: 'resend_verify' }]]
                 }
             });
             return NextResponse.json({ success: true });
@@ -795,9 +787,7 @@ Click the button below to pay securely via Plisio.`,
                 text: `⚠️ <b>Email Not Verified</b>\n\nYou must verify your email address before using the bot.\n\nPlease check your inbox/spam folder.`,
                 parse_mode: 'HTML',
                 reply_markup: {
-                    keyboard: [[{ text: '📧 Resend Verification' }]],
-                    resize_keyboard: true,
-                    one_time_keyboard: false
+                    inline_keyboard: [[{ text: '🔄 Resend Verification', callback_data: 'resend_verify' }]]
                 }
             });
             return NextResponse.json({ success: true });
