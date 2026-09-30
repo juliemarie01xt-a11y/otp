@@ -9,6 +9,25 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [selectedUserLogs, setSelectedUserLogs] = useState<any>(null);
+  const [logsModalOpen, setLogsModalOpen] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  const handleViewLogs = async (userId: string) => {
+    setSelectedUserLogs({ id: userId, logs: [] });
+    setLogsModalOpen(true);
+    setLogsLoading(true);
+    try {
+      const res = await axios.get('/api/admin/users/logs?userId=' + userId);
+      setSelectedUserLogs({ id: userId, logs: res.data.logs || [] });
+    } catch (err: any) {
+      alert('Failed to load logs: ' + err.message);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -38,8 +57,59 @@ export default function AdminUsersPage() {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-32">
+      {logsModalOpen && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2"><LucideActivity className="w-5 h-5 text-blue-500"/> Activity Logs</h2>
+              <button onClick={() => setLogsModalOpen(false)} className="text-slate-500 hover:text-white">
+                <LucideXCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
+              {logsLoading ? (
+                <div className="text-center p-12 text-slate-500 flex flex-col items-center">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  Loading precise timestamps...
+                </div>
+              ) : selectedUserLogs?.logs?.length === 0 ? (
+                <div className="text-center p-8 text-slate-500">No logs found for this user.</div>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-950 text-slate-400">
+                    <tr>
+                      <th className="p-3 rounded-tl-lg">Service</th>
+                      <th className="p-3">Number</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Created At</th>
+                      <th className="p-3 rounded-tr-lg">Cancelled At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50">
+                    {selectedUserLogs?.logs?.map((log: any) => (
+                      <tr key={log.id} className="hover:bg-slate-800/20">
+                        <td className="p-3 font-medium text-slate-300">{log.service || 'Unknown'}</td>
+                        <td className="p-3 font-mono text-slate-300">+{log.phone_number || 'Pending'}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${log.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : log.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                            {log.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-400 text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                        <td className="p-3 text-red-400 text-xs font-medium">{log.cancelled_at ? new Date(log.cancelled_at).toLocaleString() : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 p-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -147,8 +217,16 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+
+                        <button 
+                          onClick={() => handleViewLogs(u.id)}
+                          className="px-3 py-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded hover:bg-blue-600/40 text-xs font-bold transition"
+                        >
+                          Logs
+                        </button>
                         <button 
                           onClick={() => handleAction(u.id, 'reset_trust')}
+}
                           className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 text-xs font-medium transition"
                         >
                           Reset Trust
