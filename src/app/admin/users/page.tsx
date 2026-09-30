@@ -15,6 +15,7 @@ export default function AdminUsersPage() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [notes, setNotes] = useState('');
   const [profileTab, setProfileTab] = useState('logs');
+  const [manualBalance, setManualBalance] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -99,9 +100,32 @@ export default function AdminUsersPage() {
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
               {/* Top Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
-                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Wallet Balance</div>
-                  <div className="text-2xl font-black text-emerald-400">${Number(selectedUser.balance || 0).toFixed(2)}</div>
+                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Wallet Balance</div>
+                    <div className="text-2xl font-black text-emerald-400">${Number(selectedUser.balance || 0).toFixed(2)}</div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <input 
+                      type="number" 
+                      placeholder="+5 or -5" 
+                      value={manualBalance} 
+                      onChange={e => setManualBalance(e.target.value)} 
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none" 
+                    />
+                    <button 
+                      onClick={() => { 
+                        if(!manualBalance) return;
+                        if(confirm(`Are you sure you want to add/deduct ${manualBalance} to this user?`)) {
+                           handleAction(selectedUser.id, 'add_balance', manualBalance); 
+                           setManualBalance(''); 
+                        }
+                      }} 
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 rounded uppercase"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-800">
                   <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Trust Score</div>
@@ -212,8 +236,8 @@ export default function AdminUsersPage() {
                                 {dep.status === 'COMPLETED' ? (
                                   <div className="flex flex-col">
                                     <span className="text-emerald-500 font-bold text-xs">COMPLETED</span>
-                                    {dep.invoice_status === 'mismatch' && <span className="text-amber-500 text-[10px]">(mismatch)</span>}
-                                    {dep.invoice_status === 'expired' && <span className="text-amber-500 text-[10px]">(partial)</span>}
+                                    {dep.invoice_status === 'mismatch' && <span className="text-amber-500 text-[10px]">(Overpaid)</span>}
+                                    {dep.invoice_status === 'expired' && <span className="text-amber-500 text-[10px]">(Underpaid)</span>}
                                   </div>
                                 ) : (
                                   <span className="text-amber-500 font-bold text-xs">{dep.status}</span>

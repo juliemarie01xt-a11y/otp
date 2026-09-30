@@ -37,6 +37,16 @@ export async function POST(request: Request) {
         .eq('id', userId);
       if (error) throw error;
     }
+    else if (action === 'add_balance') {
+      const amount = Number(reason); // Overloading 'reason' as amount payload
+      if (isNaN(amount)) throw new Error('Invalid balance amount');
+      
+      const { error } = await supabaseAdmin.rpc('credit_balance', {
+          p_user_id: userId,
+          p_amount: amount
+      });
+      if (error) throw error;
+    }
     else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
