@@ -7,7 +7,7 @@ export async function GET() {
       .from('profiles')
       .select(`
         id, telegram_id, balance, is_email_verified, trust_score, is_banned, ban_reason, created_at,
-        activations ( status, updated_at )
+        activations ( status, created_at )
       `)
       .order('created_at', { ascending: false });
 
@@ -22,8 +22,8 @@ export async function GET() {
       const total_cancels = acts.filter((a: any) => a.status === 'CANCELLED').length;
       const recent_cancels_24h = acts.filter((a: any) => 
         a.status === 'CANCELLED' && 
-        a.updated_at && 
-        (now - new Date(a.updated_at).getTime() < 86400000)
+        a.created_at && 
+        (now - new Date(a.created_at).getTime() < 86400000)
       ).length;
       const total_completed = acts.filter((a: any) => a.status === 'COMPLETED').length;
 
