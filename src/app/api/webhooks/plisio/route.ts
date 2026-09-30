@@ -90,14 +90,32 @@ export async function POST(request: Request) {
     // 5. ATOMIC LOCK: Update the pending deposit to COMPLETED.
     //    By filtering on status = 'PENDING', this guarantees the credit
     //    happens exactly ONCE even if Plisio fires duplicate webhooks.
+        let realTxId = data.txn_id;
+    if (!realTxId && typeof data.tx_url === 'string') {
+        realTxId = data.tx_url.split('/').pop();
+    } else if (!realTxId && data.tx_urls) {
+        try {
+            const urls = typeof data.tx_urls === 'string' ? JSON.parse(data.tx_urls) : data.tx_urls;
+            if (Array.isArray(urls) && urls.length > 0) {
+                realTxId = urls[urls.length - 1].split('/').pop();
+            }
+        } catch(e) {}
+    }
+    if (!realTxId) realTxId = 'unknown_hash';
+
+    let addedAmountTemp = Number(amountPaidStr) / (1.015 / 1.01);
+    addedAmountTemp = Number(addedAmountTemp.toFixed(4));
+
     const { data: updatedDeposit, error: depError } = await supabaseAdmin
       .from('deposits')
       .update({
         status: 'COMPLETED',
-        txn_id: data.txn_id || 'plisio',
+        txn_id: realTxId,
         currency: data.currency || 'UNKNOWN',
         crypto_amount: Number(data.amount) || 0,
-        invoice_status: data.status
+        invoice_status: data.status,
+        usd_credit: addedAmountTemp,
+        payment_wallet: data.wallet_hash || 'Unknown'
       })
       .eq('id', orderId)
       .eq('status', 'PENDING')

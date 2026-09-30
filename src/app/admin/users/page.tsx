@@ -213,7 +213,8 @@ export default function AdminUsersPage() {
                       <table className="w-full text-left text-sm">
                         <thead className="bg-slate-900 text-slate-400">
                           <tr>
-                            <th className="p-3">Txn ID</th>
+                            <th className="p-3">Txn Hash</th>
+                            <th className="p-3">Wallet (To)</th>
                             <th className="p-3">Requested ($)</th>
                             <th className="p-3">Crypto Paid</th>
                             <th className="p-3">Credited ($)</th>
@@ -224,7 +225,8 @@ export default function AdminUsersPage() {
                         <tbody className="divide-y divide-slate-800/50">
                           {selectedUser?.deposits?.map((dep: any) => (
                             <tr key={dep.id} className="hover:bg-slate-800/20">
-                              <td className="p-3 font-mono text-slate-400 text-xs">{dep.txn_id || dep.id.split('-')[0] + '...'}</td>
+                              <td className="p-3 font-mono text-slate-400 text-[10px] break-all max-w-[120px]">{dep.txn_id || dep.id.split('-')[0] + '...'}</td>
+                              <td className="p-3 font-mono text-slate-400 text-[10px] break-all max-w-[120px]">{dep.payment_wallet || '-'}</td>
                               <td className="p-3 text-slate-300 font-medium">${Number(dep.amount).toFixed(2)}</td>
                               <td className="p-3">
                                 {dep.currency ? <span className="font-bold text-blue-400">{dep.crypto_amount} {dep.currency}</span> : <span className="text-slate-500">-</span>}
