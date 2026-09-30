@@ -499,7 +499,7 @@ export default function HomePage() {
                 <li><a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">Telegram Bot</a></li>
                 <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Help Center</Link></li>
                 <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link href="/admin" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-900"><LucideLock className="w-3.5 h-3.5"/> Admin Area</Link></li>
+                <li><a href="/admin" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-900"><LucideLock className="w-3.5 h-3.5"/> Admin Area</a></li>
               </ul>
             </div>
           </div>
