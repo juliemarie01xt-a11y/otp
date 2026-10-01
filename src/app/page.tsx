@@ -497,12 +497,10 @@ export default function HomePage() {
             </div>
             
             <div>
-              <h3 className="font-bold text-white mb-6 tracking-wide uppercase text-xs">Help & Support</h3>
+                            <h3 className="font-bold text-white mb-6 tracking-wide uppercase text-xs">Help & Support</h3>
               <ul className="space-y-4 text-sm font-medium">
-                <li><a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideMessageSquare className="w-3.5 h-3.5"/> Telegram Bot</a></li>
-                <li><a href="https://t.me/swiftotpofficial_Support" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideLifeBuoy className="w-3.5 h-3.5"/> Support Team</a></li>
-                <li><Link href="/dashboard/support" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideShield className="w-3.5 h-3.5"/> Help Center</Link></li>
-                <li><a href="/admin" className="text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-800/50"><LucideLock className="w-3.5 h-3.5"/> Admin Area</a></li>
+                <li><a href="https://t.me/swiftotpofficial_Support" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideLifeBuoy className="w-3.5 h-3.5"/> Telegram Support</a></li>
+                <li><Link href="/support" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideShield className="w-3.5 h-3.5"/> Help Center</Link></li>
               </ul>
             </div>
           </div>
