@@ -48,17 +48,18 @@ export default function SupportPage() {
             <div className="p-6 space-y-6">
               <div>
                 <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3">
-                  <LucideMail className="w-5 h-5" />
+                  <LucideMessageCircle className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-zinc-900 text-sm mb-1">Email Support</h3>
-                <p className="text-zinc-500 text-xs mb-4">We usually respond within 24 hours on business days.</p>
+                <h3 className="font-bold text-zinc-900 text-sm mb-1">Telegram Support</h3>
+                <p className="text-zinc-500 text-xs mb-4">Fastest way to get help. We usually respond within minutes.</p>
                 <a 
-                  href="mailto:support@swiftotp.online"
-                  className="w-full inline-flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors"
+                  href="https://t.me/swiftotpofficial_Support"
+                  target="_blank"
+                  className="w-full inline-flex justify-center items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors shadow-md"
                 >
-                  Email Us
+                  Message on Telegram
                 </a>
-                <p className="text-center text-xs text-zinc-400 mt-3 font-mono">support@swiftotp.online</p>
+                <p className="text-center text-xs text-zinc-400 mt-3 font-mono">@swiftotpofficial_Support</p>
               </div>
             </div>
           </div>

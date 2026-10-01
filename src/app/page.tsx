@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare } from 'lucide-react';
+import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare, LucideLifeBuoy } from 'lucide-react';
 
 const FEED_SERVICES = [
   { name: 'Google', logo: 'https://img.icons8.com/color/96/google-logo.png', countries: [{ c: 'GB', f: 'https://flagcdn.com/w40/gb.png', p: '+44 7700 90' }, { c: 'CA', f: 'https://flagcdn.com/w40/ca.png', p: '+1 (416) 555-' }] },
@@ -460,55 +460,60 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────── */}
-      <footer className="bg-zinc-950 pt-20 pb-10 border-t border-zinc-900 mt-20">
-        <div className="max-w-5xl mx-auto px-5">
+      <footer className="bg-zinc-950 pt-20 pb-10 border-t border-zinc-900 mt-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <div className="max-w-5xl mx-auto px-5 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-2.5 mb-6">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-md">
-                  <LucideShield className="w-5 h-5 text-zinc-900" />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                  <LucideShield className="w-6 h-6 text-white" />
                 </div>
-                <span className="font-bold text-white text-xl tracking-tight">SwiftOTP</span>
+                <span className="font-bold text-white text-2xl tracking-tight drop-shadow-md">SwiftOTP</span>
               </div>
               <p className="text-zinc-400 text-sm leading-relaxed max-w-sm mb-8">
                 The fastest, most reliable virtual numbers for SMS verification. Powered by crypto, fully automated, and perfectly integrated with Telegram.
               </p>
               <div className="flex items-center gap-4">
-                <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all shadow-lg hover:-translate-y-1">
+                <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Bot">
                    <LucideMessageSquare className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all shadow-lg hover:-translate-y-1">
-                   <LucideGlobe className="w-4 h-4" />
+                <a href="https://t.me/swiftotpofficial_Support" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-cyan-400 hover:bg-cyan-600 hover:text-white hover:border-cyan-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Support">
+                   <LucideLifeBuoy className="w-4 h-4" />
                 </a>
               </div>
             </div>
             
             <div>
-              <h3 className="font-bold text-white mb-6">Platform</h3>
-              <ul className="space-y-4 text-sm">
-                <li><Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors">Dashboard</Link></li>
-                <li><Link href="/deposit" className="text-zinc-400 hover:text-white transition-colors">Deposit Crypto</Link></li>
-                <li><Link href="/login" className="text-zinc-400 hover:text-white transition-colors">Log In</Link></li>
-                <li><Link href="/signup" className="text-zinc-400 hover:text-white transition-colors">Create Account</Link></li>
+              <h3 className="font-bold text-white mb-6 tracking-wide uppercase text-xs">Platform</h3>
+              <ul className="space-y-4 text-sm font-medium">
+                <li><Link href="/dashboard" className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500/50"></div> Dashboard</Link></li>
+                <li><Link href="/deposit" className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500/50"></div> Deposit Crypto</Link></li>
+                <li><Link href="/login" className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500/50"></div> Log In</Link></li>
+                <li><Link href="/signup" className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500/50"></div> Create Account</Link></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-white mb-6">Support</h3>
-              <ul className="space-y-4 text-sm">
-                <li><a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">Telegram Bot</a></li>
-                <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="text-zinc-400 hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><a href="/admin" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-900"><LucideLock className="w-3.5 h-3.5"/> Admin Area</a></li>
+              <h3 className="font-bold text-white mb-6 tracking-wide uppercase text-xs">Help & Support</h3>
+              <ul className="space-y-4 text-sm font-medium">
+                <li><a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideMessageSquare className="w-3.5 h-3.5"/> Telegram Bot</a></li>
+                <li><a href="https://t.me/swiftotpofficial_Support" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideLifeBuoy className="w-3.5 h-3.5"/> Support Team</a></li>
+                <li><Link href="/dashboard/support" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideShield className="w-3.5 h-3.5"/> Help Center</Link></li>
+                <li><a href="/admin" className="text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-2 mt-6 pt-6 border-t border-zinc-800/50"><LucideLock className="w-3.5 h-3.5"/> Admin Area</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="pt-8 border-t border-zinc-900 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-zinc-500 text-sm font-medium">© {new Date().getFullYear()} SwiftOTP. All rights reserved.</p>
-            <div className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-              <span className="text-zinc-400 text-xs font-bold uppercase tracking-wider">All systems operational</span>
+          <div className="pt-8 border-t border-zinc-800/80 flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="text-zinc-500 text-sm font-medium">
+              &copy; {new Date().getFullYear()} SwiftOTP. All rights reserved.
+            </p>
+            <div className="flex items-center gap-3 bg-zinc-900/80 px-4 py-2 rounded-full border border-zinc-800 shadow-inner">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+              <span className="text-zinc-300 text-xs font-bold uppercase tracking-widest">All systems operational</span>
             </div>
           </div>
         </div>
