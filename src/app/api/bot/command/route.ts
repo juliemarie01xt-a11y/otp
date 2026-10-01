@@ -477,6 +477,20 @@ Click the button below to pay securely via Plisio.`,
       return NextResponse.json({ success: true });
     }
 
+        // Handle /support command
+    if (update.message && update.message.text && update.message.text.trim().toLowerCase() === '/support') {
+        const chatId = update.message.chat.id;
+        await tgApi('sendMessage', {
+            chat_id: chatId,
+            text: '🛡️ <b>SwiftOTP Support</b>\n\nNeed help with an order or have a question? Contact our official support team on Telegram!\n\n👤 <b>Support Contact:</b> @swiftotpofficial_Support',
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [[{ text: '💬 Message Support', url: 'https://t.me/swiftotpofficial_Support' }]]
+            }
+        });
+        return NextResponse.json({ success: true });
+    }
+
     // 2. Handle Button Clicks
     if (update.callback_query) {
       const cb = update.callback_query;

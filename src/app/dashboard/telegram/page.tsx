@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { TelegramIcon } from '@/components/TelegramIcon';
-import { LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut, LucideUserPlus } from 'lucide-react';
+import { LucideLifeBuoy, LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut, LucideUserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TelegramGuidePage() {
@@ -139,6 +139,7 @@ export default function TelegramGuidePage() {
     { cmd: '/status', desc: 'View account stats & lifetime spent', icon: LucideList },
     { cmd: '/balance', desc: 'Check your current wallet balance', icon: LucideWallet },
     { cmd: '/unlink', desc: 'Disconnect your Telegram account', icon: LucideLogOut },
+    { cmd: '/support', desc: 'Get help and contact the support team', icon: LucideLifeBuoy },
   ];
 
   return (
