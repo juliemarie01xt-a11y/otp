@@ -135,28 +135,36 @@ export async function POST(request: Request) {
     addedAmount = Number(addedAmount.toFixed(4));
     
     if (addedAmount > 0) {
-      await supabaseAdmin.rpc('credit_balance', {
+      // Capture the exact new balance instantly returned by the database
+      const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc('credit_balance', {
           p_user_id: updatedDeposit.user_id,
           p_amount: addedAmount
-        });
+      });
 
-        // Try to notify via Telegram if the user has a linked account
-        try {
-          const { data: profile } = await supabaseAdmin.from('profiles').select('telegram_id, balance').eq('id', updatedDeposit.user_id).single();
-          if (profile && profile.telegram_id) {
-             const tgToken = process.env.TELEGRAM_BOT_TOKEN;
-             if (tgToken) {
-               const text = `✅ <b>Deposit Successful!</b>\n\n<b>${addedAmount.toFixed(2)}</b> has been securely added to your wallet.\n\nNew Balance: <b>${Number(profile.balance + addedAmount).toFixed(2)}</b>`;
-               await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ chat_id: profile.telegram_id, text, parse_mode: 'HTML' })
-               });
-             }
+      if (rpcError) {
+          console.error('RPC Error crediting balance:', rpcError);
+      }
+
+      // Try to notify via Telegram if the user has a linked account
+      try {
+          // We only need the telegram_id now! The database already told us the balance.
+          const { data: profile } = await supabaseAdmin.from('profiles').select('telegram_id').eq('id', updatedDeposit.user_id).single();
+          
+          if (profile && profile.telegram_id && newBalance !== null) {
+              const tgToken = process.env.TELEGRAM_BOT_TOKEN;
+              if (tgToken) {
+                  // Use the bulletproof newBalance directly!
+                  const text = `✅ <b>Deposit Successful!</b>\n\n<b>${addedAmount.toFixed(2)}</b> has been securely added to your wallet.\n\nNew Balance: <b>${Number(newBalance).toFixed(2)}</b>`;
+                  await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ chat_id: profile.telegram_id, text, parse_mode: 'HTML' })
+                  });
+              }
           }
-        } catch(e) {
-           console.error("Failed to send telegram deposit notification", e);
-        }
+      } catch(e) {
+          console.error("Failed to send telegram deposit notification", e);
+      }
     }
 
     return NextResponse.json({ success: true });
