@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { TelegramIcon } from '@/components/TelegramIcon';
-import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare, LucideLifeBuoy } from 'lucide-react';
+import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare, LucideLifeBuoy, LucideBot } from 'lucide-react';
 
 const FEED_SERVICES = [
   { name: 'Google', logo: 'https://img.icons8.com/color/96/google-logo.png', countries: [{ c: 'GB', f: 'https://flagcdn.com/w40/gb.png', p: '+44 7700 90' }, { c: 'CA', f: 'https://flagcdn.com/w40/ca.png', p: '+1 (416) 555-' }] },
@@ -479,7 +479,7 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Bot">
-                   <TelegramIcon className="w-4 h-4" />
+                   <LucideBot className="w-4 h-4" />
                 </a>
                 <a href="https://t.me/swiftotpofficial_Support" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-cyan-400 hover:bg-cyan-600 hover:text-white hover:border-cyan-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Support">
                    <TelegramIcon className="w-4 h-4" />
