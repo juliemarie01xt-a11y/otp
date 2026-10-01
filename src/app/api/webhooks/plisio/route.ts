@@ -135,19 +135,10 @@ export async function POST(request: Request) {
     addedAmount = Number(addedAmount.toFixed(4));
     
     if (addedAmount > 0) {
-      const { error: rpcError } = await supabaseAdmin.rpc('credit_balance', {
+      await supabaseAdmin.rpc('credit_balance', {
           p_user_id: updatedDeposit.user_id,
           p_amount: addedAmount
         });
-
-      if (rpcError) {
-          console.error('Failed to update balance via RPC:', rpcError);
-          // Fallback if RPC is missing
-          const { data: currentProfile } = await supabaseAdmin.from('profiles').select('balance').eq('id', updatedDeposit.user_id).single();
-          if (currentProfile) {
-              await supabaseAdmin.from('profiles').update({ balance: currentProfile.balance + addedAmount }).eq('id', updatedDeposit.user_id);
-          }
-      }
 
         // Try to notify via Telegram if the user has a linked account
         try {
