@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { TelegramIcon } from '@/components/TelegramIcon';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -22,7 +23,7 @@ const MENU = [
   { name: 'Numbers', path: '/dashboard/history', icon: LucideList },
   { name: 'My Profile', path: '/dashboard/settings', icon: LucideSettings },
   { name: 'Help & Support', path: '/dashboard/support', icon: LucideLifeBuoy },
-  { name: 'Telegram Bot', path: '/dashboard/telegram', icon: LucideBot },
+  { name: 'Telegram Bot', path: '/dashboard/telegram', icon: TelegramIcon },
 ];
 
 export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {

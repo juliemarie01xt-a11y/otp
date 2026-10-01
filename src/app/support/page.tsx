@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TelegramIcon } from '@/components/TelegramIcon';
 import { LucideMail, LucideMessageCircle, LucideChevronDown, LucideLifeBuoy, LucideCreditCard, LucidePhone, LucideArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,7 +56,7 @@ export default function SupportPage() {
             <div className="p-6 space-y-6">
               <div>
                 <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3">
-                  <LucideMessageCircle className="w-5 h-5" />
+                  <TelegramIcon className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-zinc-900 text-sm mb-1">Telegram Support</h3>
                 <p className="text-zinc-500 text-xs mb-4">Fastest way to get help. We usually respond within minutes.</p>

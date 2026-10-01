@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { TelegramIcon } from '@/components/TelegramIcon';
 import { LucideBot, LucideMessageSquare, LucideAlertTriangle, LucideTerminal, LucideSmartphone, LucideCheckCircle2, LucideXCircle, LucideActivity, LucideExternalLink, LucideShoppingCart, LucideWallet, LucideList, LucideActivitySquare, LucideLogOut, LucideUserPlus } from 'lucide-react';
 import Link from 'next/link';
 
@@ -146,12 +147,12 @@ export default function TelegramGuidePage() {
       {/* Hero Banner */}
       <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 sm:p-10 shadow-xl overflow-hidden text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
-          <LucideBot className="w-64 h-64 -mt-16 -mr-16 rotate-12" />
+          <TelegramIcon className="w-64 h-64 -mt-16 -mr-16 rotate-12" />
         </div>
         <div className="relative z-10 max-w-xl">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
-              <LucideBot className="w-6 h-6 text-white" />
+              <TelegramIcon className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Telegram Bot Integration</h1>
           </div>

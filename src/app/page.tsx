@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { TelegramIcon } from '@/components/TelegramIcon';
 import { LucideShield, LucideZap, LucideRefreshCw, LucideArrowRight, LucideWallet, LucideLock, LucideCheck, LucideGlobe, LucideUsers, LucideBriefcase, LucideStar, LucideLoader2, LucideMousePointer2, LucidePhone, LucideMessageSquare, LucideLifeBuoy } from 'lucide-react';
 
 const FEED_SERVICES = [
@@ -478,10 +479,10 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://t.me/SwiftOTPOfficial_bot" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Bot">
-                   <LucideMessageSquare className="w-4 h-4" />
+                   <TelegramIcon className="w-4 h-4" />
                 </a>
                 <a href="https://t.me/swiftotpofficial_Support" target="_blank" className="w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-cyan-400 hover:bg-cyan-600 hover:text-white hover:border-cyan-500 transition-all shadow-lg hover:-translate-y-1" title="Telegram Support">
-                   <LucideLifeBuoy className="w-4 h-4" />
+                   <TelegramIcon className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -499,7 +500,7 @@ export default function HomePage() {
             <div>
                             <h3 className="font-bold text-white mb-6 tracking-wide uppercase text-xs">Help & Support</h3>
               <ul className="space-y-4 text-sm font-medium">
-                <li><a href="https://t.me/swiftotpofficial_Support" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideLifeBuoy className="w-3.5 h-3.5"/> Telegram Support</a></li>
+                <li><a href="https://t.me/swiftotpofficial_Support" target="_blank" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><TelegramIcon className="w-3.5 h-3.5"/> Telegram Support</a></li>
                 <li><Link href="/support" className="text-zinc-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><LucideShield className="w-3.5 h-3.5"/> Help Center</Link></li>
               </ul>
             </div>
