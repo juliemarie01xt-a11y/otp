@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
     if (error) {
       setError(error.message);
     } else {
-      setSuccess('Password reset link sent! Please check your email.');
+      setSuccess('If an account with this email exists, a password reset link has been sent to your inbox.');
     }
     setLoading(false);
   };
