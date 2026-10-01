@@ -31,10 +31,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-[family-name:var(--font-geist-sans)] relative overflow-hidden">
       {/* Unified Background Glow (Same as Signup for smooth transition) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none transition-all duration-1000" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-600/20 blur-[120px] rounded-full pointer-events-none transition-all duration-1000" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-600/20 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-in fade-in duration-700">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <Link href="/" className="flex items-center justify-center gap-3 group">
           <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center shadow-xl group-hover:border-blue-500/50 transition-all">
             <LucideShield className="w-6 h-6 text-blue-500" />
@@ -52,7 +52,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10">
         <div className="bg-zinc-900/40 backdrop-blur-2xl px-8 py-10 shadow-2xl sm:rounded-3xl border border-zinc-800/60">
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
