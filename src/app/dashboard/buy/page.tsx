@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { POPULAR_COUNTRIES, POPULAR_SERVICES, getCountry, getService } from '@/lib/constants';
 
 
-// â”€â”€ Active Number Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Active Number Card ────────────────────────────────────────────────────────
 const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain }: { activation: any, user: any, fetchWallet: any, onCancel: any, onBuyAgain: any }) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [otpCode, setOtpCode] = useState('');
@@ -143,7 +143,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-sm text-red-700 font-medium">
+      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-sm text-red-400 font-medium">
         <LucideXCircle className="w-4 h-4 shrink-0" />
         {error}
       </div>
@@ -153,10 +153,10 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
   const progressPercent = Math.max(0, (timeLeft / 900) * 100);
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+    <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
       {/* Progress bar - thin line at top */}
       {!otpCode && (
-        <div className="h-0.5 bg-zinc-100">
+        <div className="h-0.5 bg-zinc-800">
           <div
             className="h-full bg-blue-500 transition-all duration-1000 ease-linear"
             style={{ width: `${progressPercent}%` }}
@@ -169,20 +169,20 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
           {/* Left: Service icon + number */}
           <div className="flex items-center gap-4 min-w-0">
             <div className="relative shrink-0">
-              <div className="w-8 h-8 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-100">
+              <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center border border-zinc-700">
                 <img src={getService(activation.service).logo} alt="Service" className="w-5 h-5 object-contain" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full overflow-hidden border-2 border-white bg-white">
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full overflow-hidden border-2 border-zinc-900 bg-zinc-800">
                 <img src={getCountry(activation.country).flagUrl} alt="Flag" className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="min-w-0">
-              <div className="font-mono text-base font-bold text-zinc-900 tracking-wide">
+              <div className="font-mono text-base font-bold text-white tracking-wide">
                 +{activation.phoneNumber}
               </div>
               <button 
                 onClick={() => copyToClipboard(activation.phoneNumber)}
-                className="text-xs text-zinc-400 hover:text-zinc-600 flex items-center gap-1 transition-colors"
+                className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors"
               >
                 <LucideCopy className="w-3 h-3" />
                 {copied ? 'Copied' : 'Copy number'}
@@ -194,14 +194,14 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
           {otpCode ? (
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-0.5 flex items-center gap-1 justify-end">
+                <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center gap-1 justify-end">
                   <LucideCheckCircle className="w-3 h-3" /> Received
                 </div>
-                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                  <span className="font-mono text-xl font-black text-emerald-600 tracking-widest">{otpCode}</span>
+                <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                  <span className="font-mono text-xl font-black text-emerald-400 tracking-widest">{otpCode}</span>
                   <button 
                     onClick={() => copyToClipboard(otpCode)}
-                    className="p-1.5 hover:bg-emerald-100 rounded-md text-emerald-600 transition-colors"
+                    className="p-1.5 hover:bg-emerald-500/20 rounded-md text-emerald-400 transition-colors"
                     title="Copy OTP"
                   >
                     <LucideCopy className="w-4 h-4" />
@@ -212,10 +212,10 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
           ) : (
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-0.5 flex items-center gap-1 justify-end">
+                <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-0.5 flex items-center gap-1 justify-end">
                   <LucideLoader2 className="w-3 h-3 animate-spin" /> Waiting
                 </div>
-                <div className="font-mono text-xl font-bold text-zinc-700">
+                <div className="font-mono text-xl font-bold text-white">
                   {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
                 </div>
               </div>
@@ -223,7 +223,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
                 onClick={cancelActivation} 
                 disabled={loading} 
                 title="Cancel Order" 
-                className="w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
               >
                 <LucideXCircle className="w-5 h-5" />
               </button>
@@ -233,7 +233,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
       </div>
 
       {/* Actions Row */}
-      <div className="bg-zinc-50/80 px-4 py-2.5 flex items-center justify-end border-t border-zinc-100">
+      <div className="bg-zinc-800/30 px-4 py-2.5 flex items-center justify-end border-t border-zinc-800">
          <button 
            onClick={async () => {
              setBuyingAgain(true);
@@ -244,7 +244,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
              }
            }}
            disabled={buyingAgain}
-           className="px-4 py-1.5 bg-white text-zinc-700 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-300 shadow-sm text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+           className="px-4 py-1.5 bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 shadow-sm text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
          >
            {buyingAgain ? <LucideLoader2 className="w-3.5 h-3.5 animate-spin" /> : <LucidePlus className="w-3.5 h-3.5" />}
            {buyingAgain ? 'Buying...' : 'Buy Again'}
@@ -252,7 +252,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
       </div>
       
       {warning && (
-        <div className="bg-amber-50 border-t border-amber-100 px-5 py-2.5 text-xs font-medium text-amber-700 text-center">
+        <div className="bg-amber-500/10 border-t border-amber-500/20 px-5 py-2.5 text-xs font-medium text-amber-400 text-center">
           {warning}
         </div>
       )}
@@ -261,7 +261,7 @@ const ActiveNumberCard = ({ activation, user, fetchWallet, onCancel, onBuyAgain 
 }
 
 
-// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [wallet, setWallet] = useState<{ balance: number } | null>(null);
@@ -507,179 +507,176 @@ export default function Home() {
 
 
   return (
-    <div className="max-w-2xl mx-auto w-full">
-      <main className="max-w-2xl mx-auto px-5 py-8">
-        {/* Select Service Wizard */}
-        <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-          {/* Header */}
-          <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center justify-between">
-            <h2 className="font-bold text-zinc-900 flex items-center gap-2">
-              {step === 1 && "1. Select Service"}
-              {step === 2 && "2. Select Country"}
-              {step === 3 && "3. Choose Route"}
-            </h2>
-            {step > 1 && (
-              <button 
-                onClick={() => {
-                  if (step === 3) setStep(2);
-                  if (step === 2) setStep(1);
-                  setAvailability(null);
-                  setError('');
-                }}
-                className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
-              >
-                ← Back
-              </button>
-            )}
-          </div>
-
-          <div className="p-3">
-            {/* STEP 1: Services */}
-              {routesLoading && (
-                <div className="flex flex-col items-center justify-center py-10 text-zinc-400">
-                  <LucideLoader2 className="w-6 h-6 animate-spin mb-2" />
-                  <p className="text-sm">Loading available services...</p>
-                </div>
-              )}
-              {!routesLoading && POPULAR_SERVICES.filter(s => availableRoutes.some(r => r.internal_service === s.code)).length === 0 && (
-                <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-8 text-center">
-                  <p className="text-zinc-500 font-medium mb-1">No Services Available</p>
-                  <p className="text-sm text-zinc-400">The admin has not configured any routes yet.</p>
-                </div>
-              )}
-            {step === 1 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {POPULAR_SERVICES.filter(s => s.code !== 'gmail' && availableRoutes.some(r => r.internal_service === s.code)).map(s => (
-                  <button
-                    key={s.code}
-                    onClick={() => { setService(s.code); setStep(2); }}
-                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50 transition-all active:scale-[0.98]"
-                  >
-                    <img src={s.logo} alt="" className="w-10 h-10 object-contain mb-3" />
-                    <span className="text-sm font-bold text-zinc-800">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* STEP 2: Countries */}
-            {step === 2 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {availableCountries.filter(c => availableRoutes.some(r => r.internal_service === service && r.country_id === c.id)).map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => { 
-                      setCountry(c.id); 
-                      setStep(3); 
-                      setTimeout(() => checkAvailability(c.id, service), 50); 
-                    }}
-                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50 transition-all active:scale-[0.98]"
-                  >
-                    <img src={c.flagUrl} alt="" className="w-8 h-6 rounded-[2px] object-cover mb-2 shadow-sm" />
-                    <span className="text-sm font-bold text-zinc-800 text-center">{c.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* STEP 3: Routes & Pricing */}
-            {step === 3 && (
-              <div className="space-y-4">
-                {/* Selection Summary */}
-                <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-                  <img src={selectedService.logo} alt="" className="w-6 h-6 object-contain" />
-                  <span className="text-sm font-bold text-zinc-300">+</span >
-                  <img src={selectedCountry.flagUrl} alt="" className="w-6 h-4 rounded-[2px] object-cover" />
-                  <div className="ml-auto text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                    {selectedService.name} • {selectedCountry.short}
-                  </div>
-                </div>
-
-                {loading && (
-                  <div className="py-12 flex flex-col items-center justify-center text-zinc-400">
-                    <LucideLoader2 className="w-8 h-8 animate-spin mb-3 text-zinc-300" />
-                    <span className="text-sm font-medium">Finding best routes...</span>
-                  </div>
-                )}
-
-                {error && !loading && (
-                  <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-start gap-3 text-sm font-medium border border-red-100">
-                    <LucideXCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                    <p>{error}</p>
-                  </div>
-                )}
-
-                {availability && !error && !loading && (
-                  <div className="space-y-3 mt-4">
-                    {availability.options.map((opt: any) => (
-                      <div 
-                        key={opt.rule_id} 
-                        className={"rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-colors " + (
-                          opt.tier === 'premium' 
-                            ? 'bg-blue-50/50 border-blue-200' 
-                            : 'bg-zinc-50 border-zinc-200'
-                        )}
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className={"font-bold text-sm " + (opt.tier === 'premium' ? 'text-blue-800' : 'text-zinc-700')}>
-                              <img src={selectedCountry.flagUrl} className="inline-block w-4 h-4 mr-1.5 object-cover rounded shadow-sm border border-black/10" alt="flag" />
-                                {opt.tier === 'premium' ? 'High-Priority' : 'Standard'} <span className="opacity-60 font-normal">({opt.server_label})</span>
-                            </span>
-                            {opt.tier === 'premium' && (
-                              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded">
-                                Faster
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-zinc-500 leading-relaxed">
-                            {opt.tier === 'premium'
-                              ? 'Historically faster delivery. Success depends on network.'
-                              : 'Success rates vary. Cancel and retry if SMS fails.'}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => buyNumber(opt.rule_id, opt.tier, opt.price)}
-                          disabled={loading}
-                          className={"w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 " + (
-                            opt.tier === 'premium'
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                              : 'bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200'
-                          )}
-                        >
-                          {purchasingRule === opt.rule_id ? (
-                            <LucideLoader2 className="w-4 h-4 animate-spin mx-auto" />
-                          ) : (
-                            '$' + Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+    <div className="w-full">
+      {/* Select Service Wizard */}
+      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-zinc-800 bg-zinc-800/50 flex items-center justify-between">
+          <h2 className="font-bold text-white flex items-center gap-2">
+            {step === 1 && "1. Select Service"}
+            {step === 2 && "2. Select Country"}
+            {step === 3 && "3. Choose Route"}
+          </h2>
+          {step > 1 && (
+            <button 
+              onClick={() => {
+                if (step === 3) setStep(2);
+                if (step === 2) setStep(1);
+                setAvailability(null);
+                setError('');
+              }}
+              className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
+            >
+              ← Back
+            </button>
+          )}
         </div>
 
-      
-        {/* Active Number Cards */}{activations.length > 0 && (
-          <div className="space-y-3 mb-8">
-            {activations.map(act => (
-              <ActiveNumberCard
-                  key={act.activationId || act.id}
-                  activation={act}
-                  user={user}
-                  fetchWallet={fetchWallet}
-                  onCancel={(id: string) => setActivations((prev: any[]) => prev.filter(a => (a.activationId || a.id) !== id))}
-                  onBuyAgain={() => handleBuyAgain(act)}
-                />
-            ))}
-          </div>
-        )}
+        <div className="p-3">
+          {/* STEP 1: Services */}
+            {routesLoading && (
+              <div className="flex flex-col items-center justify-center py-10 text-zinc-500">
+                <LucideLoader2 className="w-6 h-6 animate-spin mb-2" />
+                <p className="text-sm">Loading available services...</p>
+              </div>
+            )}
+            {!routesLoading && POPULAR_SERVICES.filter(s => availableRoutes.some(r => r.internal_service === s.code)).length === 0 && (
+              <div className="bg-zinc-800/30 border border-zinc-700 rounded-xl p-8 text-center text-zinc-400">
+                <p className="font-medium mb-1">No Services Available</p>
+                <p className="text-sm">The admin has not configured any routes yet.</p>
+              </div>
+            )}
+          {step === 1 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {POPULAR_SERVICES.filter(s => s.code !== 'gmail' && availableRoutes.some(r => r.internal_service === s.code)).map(s => (
+                <button
+                  key={s.code}
+                  onClick={() => { setService(s.code); setStep(2); }}
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-700/50 bg-zinc-800/50 hover:border-blue-500/50 hover:bg-zinc-800 transition-all active:scale-[0.98]"
+                >
+                  <img src={s.logo} alt="" className="w-10 h-10 object-contain mb-3" />
+                  <span className="text-sm font-bold text-zinc-200">{s.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-        
-        </main>
+          {/* STEP 2: Countries */}
+          {step === 2 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {availableCountries.filter(c => availableRoutes.some(r => r.internal_service === service && r.country_id === c.id)).map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => { 
+                    setCountry(c.id); 
+                    setStep(3); 
+                    setTimeout(() => checkAvailability(c.id, service), 50); 
+                  }}
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-zinc-700/50 bg-zinc-800/50 hover:border-blue-500/50 hover:bg-zinc-800 transition-all active:scale-[0.98]"
+                >
+                  <img src={c.flagUrl} alt="" className="w-8 h-6 rounded-[2px] object-cover mb-2 shadow-sm" />
+                  <span className="text-sm font-bold text-zinc-200 text-center">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* STEP 3: Routes & Pricing */}
+          {step === 3 && (
+            <div className="space-y-4">
+              {/* Selection Summary */}
+              <div className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700 text-zinc-400">
+                <img src={selectedService.logo} alt="" className="w-6 h-6 object-contain" />
+                <span className="text-sm font-bold">+</span >
+                <img src={selectedCountry.flagUrl} alt="" className="w-6 h-4 rounded-[2px] object-cover" />
+                <div className="ml-auto text-xs font-bold uppercase tracking-wider">
+                  {selectedService.name} • {selectedCountry.short}
+                </div>
+              </div>
+
+              {loading && (
+                <div className="py-12 flex flex-col items-center justify-center text-zinc-500">
+                  <LucideLoader2 className="w-8 h-8 animate-spin mb-3" />
+                  <span className="text-sm font-medium">Finding best routes...</span>
+                </div>
+              )}
+
+              {error && !loading && (
+                <div className="p-4 bg-red-500/10 text-red-400 rounded-xl flex items-start gap-3 text-sm font-medium border border-red-500/20">
+                  <LucideXCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>{error}</p>
+                </div>
+              )}
+
+              {availability && !error && !loading && (
+                <div className="space-y-3 mt-4">
+                  {availability.options.map((opt: any) => (
+                    <div 
+                      key={opt.rule_id} 
+                      className={"rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-colors " + (
+                        opt.tier === 'premium' 
+                          ? 'bg-blue-500/5 border-blue-500/30' 
+                          : 'bg-zinc-800/50 border-zinc-700'
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={"font-bold text-sm " + (opt.tier === 'premium' ? 'text-blue-400' : 'text-zinc-200')}>
+                            <img src={selectedCountry.flagUrl} className="inline-block w-4 h-4 mr-1.5 object-cover rounded shadow-sm border border-black/10" alt="flag" />
+                              {opt.tier === 'premium' ? 'High-Priority' : 'Standard'} <span className="opacity-60 font-normal">({opt.server_label})</span>
+                          </span>
+                          {opt.tier === 'premium' && (
+                            <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded">
+                              Faster
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-zinc-500 leading-relaxed">
+                          {opt.tier === 'premium'
+                            ? 'Historically faster delivery. Success depends on network.'
+                            : 'Success rates vary. Cancel and retry if SMS fails.'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => buyNumber(opt.rule_id, opt.tier, opt.price)}
+                        disabled={loading}
+                        className={"w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-[0.97] disabled:opacity-50 border-none " + (
+                          opt.tier === 'premium'
+                            ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                            : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                        )}
+                      >
+                        {purchasingRule === opt.rule_id ? (
+                          <LucideLoader2 className="w-4 h-4 animate-spin mx-auto" />
+                        ) : (
+                          '$' + Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+    
+      {/* Active Number Cards */}
+      {activations.length > 0 && (
+        <div className="space-y-3 mt-8 mb-8">
+          {activations.map(act => (
+            <ActiveNumberCard
+                key={act.activationId || act.id}
+                activation={act}
+                user={user}
+                fetchWallet={fetchWallet}
+                onCancel={(id: string) => setActivations((prev: any[]) => prev.filter(a => (a.activationId || a.id) !== id))}
+                onBuyAgain={() => handleBuyAgain(act)}
+              />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
