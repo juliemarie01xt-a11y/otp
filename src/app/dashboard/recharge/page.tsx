@@ -55,7 +55,7 @@ export default function DepositPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
         <LucideLoader2 className="w-5 h-5 animate-spin text-zinc-400" />
       </div>
     );
@@ -63,9 +63,9 @@ export default function DepositPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 p-6 font-[family-name:var(--font-geist-sans)]">
-        <h1 className="text-xl font-bold text-zinc-900 mb-4">You must be logged in</h1>
-        <Link href="/dashboard" className="px-4 py-2.5 bg-zinc-900 text-white rounded-lg text-sm font-semibold hover:bg-zinc-800 transition-colors">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 p-6 font-[family-name:var(--font-geist-sans)]">
+        <h1 className="text-xl font-bold text-white mb-4">You must be logged in</h1>
+        <Link href="/dashboard" className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-500 transition-colors">
           Go to Dashboard
         </Link>
       </div>
@@ -75,15 +75,15 @@ export default function DepositPage() {
   return (
     <div className="max-w-md mx-auto w-full">
       <main className="w-full">
-        <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-          <div className="px-6 py-5 border-b border-zinc-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-100">
+        <div className="bg-zinc-900/50 backdrop-blur rounded-xl border border-zinc-800 overflow-hidden">
+          <div className="px-6 py-5 border-b border-zinc-800 flex items-center gap-3">
+            <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center border border-zinc-700">
               <LucideWallet className="w-5 h-5 text-zinc-400" />
             </div>
             <div>
-              <h1 className="font-bold text-zinc-900">Top up wallet</h1>
+              <h1 className="font-bold text-white">Top up wallet</h1>
               <p className="text-xs text-zinc-400">
-                Balance: <span className="font-mono font-bold text-zinc-600">${balance}</span>
+                Balance: <span className="font-mono font-bold text-zinc-300">${balance}</span>
               </p>
             </div>
           </div>
@@ -100,8 +100,8 @@ export default function DepositPage() {
                     onClick={() => setAmount(preset)}
                     className={`py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-[0.97] ${
                       amount === preset
-                        ? 'bg-zinc-900 text-white'
-                        : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 border border-zinc-700'
                     }`}
                   >
                     ${preset}
@@ -110,28 +110,28 @@ export default function DepositPage() {
               </div>
 
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-sm">$</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-semibold text-sm">$</span>
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 pl-7 pr-4 text-sm font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-shadow"
+                  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-2.5 pl-7 pr-4 text-sm font-semibold text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-shadow"
                   placeholder="Custom amount"
                 />
               </div>
               
               {amount >= 1 && (
-                <div className="mt-3 flex justify-between items-center text-xs text-zinc-500 bg-zinc-50 px-3 py-2 rounded border border-zinc-100">
+                <div className="mt-3 flex justify-between items-center text-xs text-zinc-400 bg-zinc-800/50 px-3 py-2 rounded border border-zinc-700">
                   <span>Estimated Total (incl. 1.5% fee):</span>
-                  <span className="font-semibold text-zinc-900">${(amount * 1.015).toFixed(2)}</span>
+                  <span className="font-semibold text-white">${(amount * 1.015).toFixed(2)}</span>
                 </div>
               )}
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-700 text-sm font-medium p-3 rounded-lg border border-red-100">
+              <div className="bg-red-500/10 text-red-500 text-sm font-medium p-3 rounded-lg border border-red-500/20">
                 {error}
               </div>
             )}
@@ -139,7 +139,7 @@ export default function DepositPage() {
             <button
               onClick={handleDeposit}
               disabled={loading || !user}
-              className="w-full bg-zinc-900 text-white font-semibold text-sm py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 active:scale-[0.98]"
+              className="w-full bg-blue-600 text-white font-semibold text-sm py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-500 transition-colors disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? (
                 <LucideLoader2 className="w-4 h-4 animate-spin" />
@@ -147,13 +147,13 @@ export default function DepositPage() {
                 <>Pay with crypto <LucideArrowRight className="w-4 h-4" /></>
               )}
             </button>
-            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 mt-4">
-              <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
-                <strong className="font-bold">Don't worry about exact amounts!</strong><br />
+            <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 mt-4">
+              <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
+                <strong className="font-bold text-white">Don't worry about exact amounts!</strong><br />
                 If you underpay or overpay, our system will automatically detect the exact amount of crypto we receive and credit your wallet fairly.
               </p>
             </div>
-            <p className="text-center text-[11px] text-zinc-400 font-medium mt-2">
+            <p className="text-center text-[11px] text-zinc-500 font-medium mt-2">
               Secured by Plisio. USDT, Bitcoin, and Litecoin accepted.
             </p>
           </div>

@@ -28,22 +28,18 @@ export default function DashboardOverviewPage() {
         .eq('id', session.user.id)
         .single();
 
-      // Fetch dynamic prices for trending widgets
       try {
         const pricesRes = await fetch('/api/routes/available').then(r => r.json());
         if (pricesRes.routes) {
           const newPrices = { ...trendingPrices };
           const services = ['wa', 'gv', 'tg', 'go'];
-          
           for (const s of services) {
             const routes = pricesRes.routes.filter((r: any) => r.internal_service === s);
             if (routes.length > 0) {
               let minWholesale = Infinity;
               for (const r of routes) {
                 let cost = r.cached_wholesale_cost;
-                if (r.country_id === '12' && s === 'gv' && cost < 0.188) {
-                  cost = 0.188;
-                }
+                if (r.country_id === '12' && s === 'gv' && cost < 0.188) cost = 0.188;
                 if (cost < minWholesale) minWholesale = cost;
               }
               const finalPrice = (minWholesale + 0.012).toFixed(2);
@@ -68,148 +64,176 @@ export default function DashboardOverviewPage() {
   }, []);
 
   return (
-    <div className="space-y-8 pb-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Welcome back</h1>
-          <p className="text-zinc-500 mt-1 text-sm">Here is what is happening with your numbers today.</p>
+          <h1 className="text-2xl font-bold text-white">Overview</h1>
+          <p className="text-zinc-400">Welcome back! Here's what's happening with your account.</p>
         </div>
-        <Link href="/dashboard/buy" className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm">
-          Buy a Number <LucideArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
-
-      {/* IDEA 3: Trending Services */}
-      <div>
-        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-          <LucideTrendingUp className="w-4 h-4 text-orange-500" /> Trending Services Today
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { id: 'wa', name: 'WhatsApp', price: trendingPrices.wa, img: 'https://img.icons8.com/color/96/whatsapp--v1.png' },
-            { id: 'gv', name: 'Google Voice', price: trendingPrices.gv, img: 'https://img.icons8.com/color/96/google-voice.png' },
-            { id: 'tg', name: 'Telegram', price: trendingPrices.tg, img: 'https://img.icons8.com/color/96/telegram-app.png' },
-            { id: 'go', name: 'Google / YouTube / Gmail', price: trendingPrices.go, img: 'https://img.icons8.com/color/96/google-logo.png' },
-          ].map(s => (
-            <Link key={s.id} href={`/dashboard/buy`} className="bg-white p-4 rounded-xl border border-zinc-200 hover:border-blue-500 hover:shadow-md transition-all group flex items-center gap-3 relative overflow-hidden">
-              <img src={s.img} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" alt={s.name} />
-              <div>
-                <p className="font-bold text-zinc-900 text-sm leading-tight line-clamp-2">{s.name}</p>
-                <p className="text-xs text-zinc-500">from ${s.price}</p>
-              </div>
-            </Link>
-          ))}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Link href="/dashboard/buy" className="flex-1 sm:flex-none">
+            <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              <LucidePhoneCall className="w-4 h-4" />
+              Buy a Number
+            </button>
+          </Link>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-zinc-200 flex items-center gap-4 shadow-sm hover:border-zinc-300 transition-colors">
-          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-100">
-            <LucidePhoneCall className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Total Numbers</p>
-            <p className="text-2xl font-bold text-zinc-900 leading-tight">{stats.total}</p>
-          </div>
-        </div>
-        <div className="bg-white p-5 rounded-xl border border-zinc-200 flex items-center gap-4 shadow-sm hover:border-zinc-300 transition-colors">
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center border border-emerald-100">
-            <LucideWallet className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Total Spent</p>
-            <p className="text-2xl font-bold text-zinc-900 leading-tight">${stats.spent.toFixed(2)}</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Wallet Stat */}
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="p-3 bg-blue-500/10 rounded-lg">
+              <LucideWallet className="w-6 h-6 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-zinc-400">Current Balance</p>
+              <h3 className="text-2xl font-bold text-white">${stats.balance.toFixed(2)}</h3>
+            </div>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-zinc-200 flex items-center gap-4 shadow-sm hover:border-zinc-300 transition-colors">
-          <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center border border-orange-100">
-            <LucideActivity className="w-5 h-5" />
+
+        {/* Total Activations */}
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 rounded-lg">
+              <LucideActivity className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-zinc-400">Total Activations</p>
+              <h3 className="text-2xl font-bold text-white">{stats.total}</h3>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Active Sessions</p>
-            <p className="text-2xl font-bold text-zinc-900 leading-tight">{stats.pending}</p>
+        </div>
+
+        {/* Total Spent */}
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-red-500/10 rounded-lg">
+              <LucideCheckCircle className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-zinc-400">Total Spent</p>
+              <h3 className="text-2xl font-bold text-white">${stats.spent.toFixed(2)}</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Actions */}
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-500/10 rounded-lg">
+              <LucideTrendingUp className="w-6 h-6 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-zinc-400">Pending Actions</p>
+              <h3 className="text-2xl font-bold text-white">{stats.pending}</h3>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* IDEA 1: Wallet & Quick Top-Up */}
-        <div className="lg:col-span-1">
-          <div className="bg-zinc-900 p-7 rounded-2xl border border-zinc-800 text-white shadow-xl relative overflow-hidden h-full flex flex-col justify-between">
-            <div className="absolute -right-16 -top-16 w-48 h-48 bg-blue-500 rounded-full blur-[80px] opacity-30 pointer-events-none"></div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-zinc-400 text-sm">Available Balance</h3>
-                <div className="p-1.5 bg-zinc-800 rounded-md border border-zinc-700">
-                  <LucideWallet className="w-4 h-4 text-zinc-300" />
+        {/* Main content - Recent Transactions */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
+            <Link href="/dashboard/history" className="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1">
+              View all <LucideArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+            {recent.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 mb-4">
+                  <LucideActivity className="w-6 h-6 text-zinc-500" />
                 </div>
+                <h3 className="text-lg font-medium text-white mb-1">No transactions yet</h3>
+                <p className="text-zinc-400 text-sm max-w-sm mx-auto mb-4">You haven't purchased any numbers yet. Buy your first number to see it here.</p>
+                <Link href="/dashboard/buy">
+                  <button className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Buy a Number
+                  </button>
+                </Link>
               </div>
-              <p className="text-5xl font-bold tracking-tight mb-2">${stats.balance.toFixed(2)}</p>
-              <p className="text-xs text-zinc-500 mb-8">Ready to spend on numbers</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <Link href="/dashboard/recharge" className="py-2.5 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-center rounded-lg text-sm font-semibold transition-all">$10</Link>
-                <Link href="/dashboard/recharge" className="py-2.5 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-center rounded-lg text-sm font-semibold transition-all">$25</Link>
-                <Link href="/dashboard/recharge" className="py-2.5 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-center rounded-lg text-sm font-semibold transition-all">$50</Link>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-800 bg-zinc-900/50">
+                      <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Service</th>
+                      <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Number</th>
+                      <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Date</th>
+                      <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Cost</th>
+                      <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {recent.map((item) => (
+                      <tr key={item.id} className="hover:bg-zinc-800/50 transition-colors">
+                        <td className="py-3 px-4 text-sm text-white font-medium">
+                          {getService(item.service)?.name || item.service}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-zinc-300 font-mono">
+                          +{item.phone_number}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-zinc-400">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-zinc-300">
+                          ${item.cost.toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium
+                            ${item.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-500' : 
+                              item.status === 'PENDING' ? 'bg-orange-500/10 text-orange-500' : 
+                              'bg-red-500/10 text-red-500'}`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <Link href="/dashboard/recharge" className="block w-full text-center py-3 bg-white text-zinc-900 font-bold rounded-lg hover:bg-zinc-100 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]">
-                Add Crypto Funds
-              </Link>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
-          <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-            <h3 className="font-bold text-zinc-900">Recent Transactions</h3>
-            <Link href="/dashboard/history" className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full transition-colors">View all</Link>
+        {/* Sidebar - Trending Services */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Trending Services</h2>
           </div>
-          <div className="divide-y divide-zinc-100 flex-1">
-            {recent.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-zinc-500 text-sm">
-                <LucideActivity className="w-8 h-8 text-zinc-300 mb-3" />
-                <p>No recent activity.</p>
-                <Link href="/dashboard/buy" className="text-blue-600 font-semibold mt-1">Buy your first number</Link>
-              </div>
-            ) : (
-              recent.map((r) => {
-                const srv = getService(r.service);
-                return (
-                <div key={r.id} className="p-4 px-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-zinc-100 shadow-sm flex items-center justify-center p-2">
-                      <img src={srv.logo} alt="" className="w-full h-full object-contain" />
+          
+          <div className="space-y-3">
+            {[
+              { id: 'wa', name: 'WhatsApp', price: trendingPrices.wa, icon: '💬' },
+              { id: 'gv', name: 'Google Voice', price: trendingPrices.gv, icon: '📞' },
+              { id: 'tg', name: 'Telegram', price: trendingPrices.tg, icon: '✈️' },
+              { id: 'go', name: 'Google/YouTube', price: trendingPrices.go, icon: '🔴' }
+            ].map(service => (
+              <Link href={`/dashboard/buy?service=${service.id}`} key={service.id}>
+                <div className="bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 rounded-xl p-4 flex items-center justify-between transition-colors group cursor-pointer mt-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-xl">
+                      {service.icon}
                     </div>
                     <div>
-                      <p className="font-bold text-sm text-zinc-900">{r.phone_number || 'Awaiting number...'}</p>
-                      <p className="text-xs text-zinc-500 font-medium">{new Date(r.created_at).toLocaleString()}</p>
+                      <h4 className="text-white font-medium">{service.name}</h4>
+                      <p className="text-sm text-zinc-400">From ${service.price}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <span className="font-mono text-sm font-bold text-zinc-900">${r.cost}</span>
-                      <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{srv.name}</p>
-                    </div>
-                    <div className={`p-2 rounded-lg ${
-                      r.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' :
-                      r.status === 'CANCELLED' ? 'bg-red-50 text-red-600' :
-                      'bg-orange-50 text-orange-600'
-                    }`}>
-                      {r.status === 'COMPLETED' && <LucideCheckCircle className="w-4 h-4" />}
-                      {r.status === 'CANCELLED' && <LucideXCircle className="w-4 h-4" />}
-                      {r.status === 'PENDING' && <LucideActivity className="w-4 h-4 animate-pulse" />}
-                    </div>
-                  </div>
+                  <LucideArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-blue-500 transition-colors" />
                 </div>
-                );
-              })
-            )}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

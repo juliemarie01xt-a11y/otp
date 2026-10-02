@@ -13,8 +13,10 @@ import {
   LucideSettings, 
   LucideLifeBuoy, 
   LucideLogOut, 
-  LucideShield, LucideBot
+  LucideShield,
+  LucideBot
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const MENU = [
   { name: 'Dashboard', path: '/dashboard', icon: LucideLayoutDashboard },
@@ -26,67 +28,87 @@ const MENU = [
   { name: 'Telegram Bot', path: '/dashboard/telegram', icon: TelegramIcon },
 ];
 
-export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data } = await supabase.from('profiles').select('balance').eq('id', session.user.id).single();
+        if (data) setBalance(data.balance);
+      }
+    };
+    fetchWallet();
+
+    const handleWalletUpdate = (event: any) => {
+      if (event.detail && event.detail.balance !== undefined) {
+        setBalance(event.detail.balance);
+      } else {
+        fetchWallet();
+      }
+    };
+
+    window.addEventListener('walletUpdated', handleWalletUpdate);
+    return () => window.removeEventListener('walletUpdated', handleWalletUpdate);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/');
-    router.refresh();
+    router.push('/login');
   };
 
   return (
-    <>
-    {/* Mobile Backdrop */}
-    {isOpen && (
-      <div 
-        className="fixed inset-0 bg-black/50 z-40 md:hidden" 
-        onClick={onClose}
-      />
-    )}
-
-    <div className={`w-64 bg-zinc-900 text-zinc-300 h-screen fixed top-0 left-0 flex flex-col border-r border-zinc-800 z-50 transition-transform duration-200 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-      <div className="p-6">
-        <Link href="/" className="flex items-center gap-2.5 text-white">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-            <LucideShield className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-xl tracking-tight">SwiftOTP</span>
-        </Link>
+    <div className="h-full bg-zinc-900 border-r border-zinc-800 flex flex-col w-full">
+      {/* Logo */}
+      <div className="p-6 flex items-center space-x-3 shrink-0">
+        <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
+          <LucideShield className="w-5 h-5 text-white" />
+        </div>
+        <span className="text-xl font-bold text-white">OTP Service</span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1 mt-4">
+      {/* Menu */}
+      <div className="flex-1 px-4 space-y-1 overflow-y-auto py-2">
         {MENU.map((item) => {
-          const isActive = pathname === item.path;
+          const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
               href={item.path}
-              onClick={() => onClose && onClose()}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              onClick={onClose}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'hover:bg-zinc-800 hover:text-white'
+                  ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500' 
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
               }`}
             >
-              <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
-              {item.name}
+              <Icon className="w-5 h-5" />
+              <span className="font-medium">{item.name}</span>
             </Link>
           );
         })}
-      </nav>
+      </div>
 
-      <div className="p-4 border-t border-zinc-800">
-        <button 
+      {/* Bottom Section */}
+      <div className="p-4 border-t border-zinc-800 space-y-2 shrink-0">
+        {/* Balance Display */}
+        <div className="px-4 py-3 bg-zinc-950/50 rounded-lg border border-zinc-800/50 flex items-center justify-between">
+          <span className="text-sm text-zinc-500">Balance</span>
+          <span className="text-sm font-mono text-white">₹{balance !== null ? balance.toFixed(2) : '0.00'}</span>
+        </div>
+        
+        <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+          className="w-full flex items-center space-x-3 px-4 py-3 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
         >
           <LucideLogOut className="w-5 h-5" />
-          Log out
+          <span className="font-medium">Logout</span>
         </button>
       </div>
     </div>
-    </>
   );
 }
