@@ -214,16 +214,16 @@ export default function DashboardOverviewPage() {
           
           <div className="space-y-3">
             {[
-              { id: 'wa', name: 'WhatsApp', price: trendingPrices.wa, icon: '💬' },
-              { id: 'gv', name: 'Google Voice', price: trendingPrices.gv, icon: '📞' },
-              { id: 'tg', name: 'Telegram', price: trendingPrices.tg, icon: '✈️' },
-              { id: 'go', name: 'Google/YouTube', price: trendingPrices.go, icon: '🔴' }
+              { id: 'wa', name: 'WhatsApp', price: trendingPrices.wa },
+              { id: 'gv', name: 'Google Voice', price: trendingPrices.gv },
+              { id: 'tg', name: 'Telegram', price: trendingPrices.tg },
+              { id: 'go', name: 'Google/YouTube', price: trendingPrices.go }
             ].map(service => (
               <Link href={`/dashboard/buy?service=${service.id}`} key={service.id}>
                 <div className="bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 rounded-xl p-4 flex items-center justify-between transition-colors group cursor-pointer mt-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-xl">
-                      {service.icon}
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
+                      <img src={getService(service.id).logo} alt={service.name} className="w-8 h-8 object-contain" />
                     </div>
                     <div>
                       <h4 className="text-white font-medium">{service.name}</h4>
