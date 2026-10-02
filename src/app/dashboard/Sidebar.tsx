@@ -98,7 +98,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         {/* Balance Display */}
         <div className="px-4 py-3 bg-zinc-950/50 rounded-lg border border-zinc-800/50 flex items-center justify-between">
           <span className="text-sm text-zinc-500">Balance</span>
-          <span className="text-sm font-mono text-white">₹{balance !== null ? balance.toFixed(2) : '0.00'}</span>
+          <span className="text-sm font-mono text-white">${balance !== null ? balance.toFixed(2) : '0.00'}</span>
         </div>
         
         <button

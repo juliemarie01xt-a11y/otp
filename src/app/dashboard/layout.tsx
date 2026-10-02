@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center space-x-3 bg-zinc-800 border border-zinc-700 px-4 py-2 rounded-xl">
               <LucideWallet className="w-4 h-4 text-blue-400" />
               <span className="text-white font-mono font-medium">
-                ₹{wallet?.balance?.toFixed(2) || '0.00'}
+                ${wallet?.balance?.toFixed(2) || '0.00'}
               </span>
               <Link 
                 href="/dashboard/recharge" 
