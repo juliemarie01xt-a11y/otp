@@ -61,6 +61,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Activation is not pending' }, { status: 400 });
     }
 
+    // Handle SMSPin: Direct internal cancellation & wallet refund
+    if (source === 'smspin') {
+      const refundAmount = Number(activation.cost);
+      const { data: updatedAct } = await supabaseAdmin
+        .from('activations')
+        .update({ status: 'CANCELLED', cancelled_at: new Date().toISOString() })
+        .eq('vsim_activation_id', id.toString())
+        .eq('status', 'PENDING')
+        .select();
+
+      let newBalance = 0;
+      if (updatedAct && updatedAct.length > 0) {
+        const { data: rpcBalance } = await supabaseAdmin.rpc('refund_balance', {
+          p_user_id: userId,
+          p_amount: refundAmount
+        });
+        if (rpcBalance !== null) newBalance = rpcBalance;
+        await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: userId, p_activation_id: id.toString() });
+      }
+
+      return NextResponse.json({ success: true, message: 'CANCELLED', refundedAmount: refundAmount, newBalance });
+    }
+
     // 2. Call the chosen API to actually cancel
     const response = await axios.get(TARGET_API_URL, {
       params: {

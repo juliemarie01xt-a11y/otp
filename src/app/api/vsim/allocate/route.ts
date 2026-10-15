@@ -82,6 +82,119 @@ export async function POST(request: Request) {
 
     // 3. Fallback Engine Loop
     for (const rule of rules) {
+      if (rule.target_api === 'smspin') {
+        const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY;
+        if (!SMSPIN_API_KEY) {
+          lastError = 'SMSPin API key is not configured in server environment (.env.local)';
+          continue;
+        }
+
+        try {
+          const appParam = rule.target_service_code || 'googlevoice';
+          const smspinUrl = `https://api.smspinverify.com/user/get_number.php?customer=${encodeURIComponent(SMSPIN_API_KEY)}&app=${encodeURIComponent(appParam)}&country=USA&number=&duration=15%20minutes`;
+          
+          const smspinRes = await axios.get(smspinUrl, { validateStatus: (s) => s < 500 });
+          const sData = smspinRes.data;
+
+          let phone = '';
+          let actId = '';
+          let wholesaleCost = Number(rule.cached_wholesale_cost) || 0.45;
+
+          if (typeof sData === 'object' && sData !== null) {
+            if (sData.success === false) {
+              lastError = sData.error || 'Failed to allocate from SMSPin';
+              continue;
+            }
+            if (sData.data) {
+              phone = String(sData.data.number || sData.data.phone || '');
+              actId = String(sData.data.id || sData.data.n_id || phone);
+              if (sData.data.deduction) wholesaleCost = parseFloat(sData.data.deduction);
+            }
+          } else if (typeof sData === 'string') {
+            const clean = sData.trim();
+            if (clean.startsWith('{')) {
+              try {
+                const parsed = JSON.parse(clean);
+                if (parsed.success === false) {
+                  lastError = parsed.error || 'Failed to allocate from SMSPin';
+                  continue;
+                }
+                if (parsed.data) {
+                  phone = String(parsed.data.number || parsed.data.phone || '');
+                  actId = String(parsed.data.id || parsed.data.n_id || phone);
+                  if (parsed.data.deduction) wholesaleCost = parseFloat(parsed.data.deduction);
+                }
+              } catch (_) {}
+            }
+
+            if (!phone) {
+              if (clean.toLowerCase().includes('error') || clean.toLowerCase().includes('not found') || clean.toLowerCase().includes('no free') || clean.toLowerCase().includes('access denied')) {
+                lastError = clean;
+                continue;
+              }
+              const parts = clean.split('|');
+              phone = parts[0].replace(/\D/g, '');
+              actId = parts.length > 1 ? parts[1].trim() : phone;
+            }
+          }
+
+          if (!phone) {
+            lastError = 'SMSPin did not return a valid phone number. Response: ' + String(sData);
+            continue;
+          }
+
+          let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
+
+          if (maxPrice && retailCost > (Number(maxPrice) + 0.0001)) {
+            lastError = `Price changed! The route now costs $${retailCost}. Order cancelled to protect your wallet. Please refresh prices.`;
+            continue;
+          }
+
+          if (retailCost > userBalance) {
+            lastError = 'Your wallet balance is insufficient for this transaction.';
+            continue;
+          }
+
+          const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc('deduct_balance', {
+            p_user_id: userId,
+            p_amount: retailCost
+          });
+
+          if (rpcError) {
+            lastError = 'Insufficient balance (concurrency check). Order cancelled.';
+            continue;
+          }
+
+          await supabaseAdmin
+            .from('activations')
+            .insert({
+              user_id: userId,
+              vsim_activation_id: `smspin::${actId}`,
+              country: country,
+              service: service,
+              phone_number: phone,
+              cost: retailCost,
+              status: 'PENDING'
+            });
+
+          return NextResponse.json({
+            success: true,
+            activationId: `smspin::${actId}`,
+            phoneNumber: phone,
+            cost: retailCost,
+            rule_id: rule.id,
+            target_api: 'smspin',
+            newBalance: newBalance,
+            country: country,
+            service: service,
+            operator: 'smspin'
+          });
+        } catch (err: any) {
+          lastError = err.message;
+          continue;
+        }
+      }
+
       const TARGET_API_URL = rule.target_api === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;
       const TARGET_API_KEY = rule.target_api === 'smsbower' ? process.env.SMSBOWER_API_KEY : process.env.VSIM_API_KEY;
 

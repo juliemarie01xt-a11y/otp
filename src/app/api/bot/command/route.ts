@@ -854,6 +854,21 @@ Click the button below to pay securely via Plisio.`,
         const parts = fullActId.split('::');
         const source = parts.length > 1 ? parts[0] : 'vsim';
         const realId = parts.length > 1 ? parts[1] : fullActId;
+
+        if (source === 'smspin') {
+          const { data: updatedAct } = await supabaseAdmin.from('activations').update({ status: 'CANCELLED', cancelled_at: new Date().toISOString() }).eq('vsim_activation_id', fullActId).eq('status', 'PENDING').select();
+          if (updatedAct && updatedAct.length > 0) {
+            await supabaseAdmin.rpc('refund_balance', { p_user_id: profile.id, p_amount: Number(activation.cost) });
+            await supabaseAdmin.rpc('handle_hoarder_strike', { p_user_id: profile.id, p_activation_id: fullActId });
+            await tgApi('editMessageText', { 
+              chat_id: chatId, message_id: messageId, parse_mode: 'HTML',
+              text: `✅ <b>Number Cancelled</b>\n\nNumber: <code>+${activation.phone_number}</code>\nRefunded: <b>${Number(activation.cost).toFixed(2)}</b>`
+            });
+          } else {
+            await tgApi('editMessageText', { chat_id: chatId, message_id: messageId, text: '❌ Cancellation conflict.' });
+          }
+          return NextResponse.json({ success: true });
+        }
         const TARGET_API_URL = source === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;
         const TARGET_API_KEY = source === 'smsbower' ? SMSBOWER_API_KEY : VSIM_API_KEY;
 
@@ -905,6 +920,93 @@ Click the button below to pay securely via Plisio.`,
         if (userBalance <= PROFIT_MARGIN) {
            await tgApi('sendMessage', { chat_id: chatId, text: `❌ Your wallet balance is insufficient.` });
            return NextResponse.json({ success: true });
+        }
+
+        if (rule.target_api === 'smspin') {
+          const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY;
+          if (!SMSPIN_API_KEY) {
+            await tgApi('sendMessage', { chat_id: chatId, text: '❌ SMSPin API key not configured on server.' });
+            return NextResponse.json({ success: true });
+          }
+
+          try {
+            const smspinUrl = `https://api.smspinverify.com/user/get_number.php?customer=${encodeURIComponent(SMSPIN_API_KEY)}&app=${encodeURIComponent(rule.target_service_code || 'googlevoice')}&country=USA&number=&duration=15%20minutes`;
+            const smspinRes = await axios.get(smspinUrl, { validateStatus: (s) => s < 500 });
+            const sData = smspinRes.data;
+
+            let phone = '';
+            let actId = '';
+            let wholesaleCost = Number(rule.cached_wholesale_cost) || 0.45;
+
+            if (typeof sData === 'object' && sData !== null) {
+              if (sData.success === false) {
+                await tgApi('sendMessage', { chat_id: chatId, text: `❌ Provider error: ${sData.error || 'Out of stock'}` });
+                return NextResponse.json({ success: true });
+              }
+              if (sData.data) {
+                phone = String(sData.data.number || sData.data.phone || '');
+                actId = String(sData.data.id || sData.data.n_id || phone);
+                if (sData.data.deduction) wholesaleCost = parseFloat(sData.data.deduction);
+              }
+            } else if (typeof sData === 'string') {
+              const clean = sData.trim();
+              if (clean.toLowerCase().includes('error') || clean.toLowerCase().includes('not found') || clean.toLowerCase().includes('no free') || clean.toLowerCase().includes('access denied')) {
+                await tgApi('sendMessage', { chat_id: chatId, text: `❌ Provider error: ${clean}` });
+                return NextResponse.json({ success: true });
+              }
+              const parts = clean.split('|');
+              phone = parts[0].replace(/\D/g, '');
+              actId = parts.length > 1 ? parts[1].trim() : phone;
+            }
+
+            if (!phone) {
+              await tgApi('sendMessage', { chat_id: chatId, text: '❌ Provider failed to return a valid number.' });
+              return NextResponse.json({ success: true });
+            }
+
+            let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
+            if (retailCost > userBalance) {
+              await tgApi('sendMessage', { chat_id: chatId, text: `❌ Insufficient balance. You need ${formatMoney(retailCost)}` });
+              return NextResponse.json({ success: true });
+            }
+
+            const { error: balErr } = await supabaseAdmin.rpc('deduct_balance', {
+              p_user_id: profile.id,
+              p_amount: retailCost
+            });
+
+            if (balErr) {
+              await tgApi('sendMessage', { chat_id: chatId, text: '❌ Insufficient balance (concurrency check). Order cancelled.' });
+              return NextResponse.json({ success: true });
+            }
+
+            await supabaseAdmin.from('activations').insert({
+              user_id: profile.id,
+              vsim_activation_id: `smspin::${actId}`,
+              country: rule.country_id,
+              service: rule.internal_service,
+              phone_number: phone.toString(),
+              cost: retailCost,
+              status: 'PENDING'
+            });
+
+            const keyboard = [
+              [{ text: '🔄 Check OTP', callback_data: `check_otp_smspin::${actId}` }],
+              [{ text: '❌ Cancel & Refund', callback_data: `cancel_act_smspin::${actId}` }]
+            ];
+
+            await tgApi('sendMessage', {
+              chat_id: chatId,
+              parse_mode: 'HTML',
+              text: `✅ <b>Number Allocated Successfully!</b>\n\nNumber: <code>+${phone}</code>\nService: <b>Google Voice</b>\nCost: <b>${formatMoney(retailCost)}</b>\n\n<i>Waiting for SMS...</i>`,
+              reply_markup: { inline_keyboard: keyboard }
+            });
+
+            return NextResponse.json({ success: true });
+          } catch (e: any) {
+            await tgApi('sendMessage', { chat_id: chatId, text: `❌ Failed to allocate number: ${e.message}` });
+            return NextResponse.json({ success: true });
+          }
         }
 
         const TARGET_API_URL = rule.target_api === 'smsbower' ? SMSBOWER_API_URL : VSIM_API_URL;

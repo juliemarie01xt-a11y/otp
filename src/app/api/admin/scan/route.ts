@@ -110,6 +110,40 @@ export async function GET(request: Request) {
       }
     }
 
+    // --- SMSPIN SCAN (Google Voice USA) ---
+    const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY || '';
+    if (country === '12' && service === 'gv') {
+      let smspinPrice = 0.45;
+      if (SMSPIN_API_KEY) {
+        try {
+          const ratesRes = await axios.get('https://api.smspinverify.com/json/get_rates.php', {
+            params: { customer: SMSPIN_API_KEY, country: 'USA' },
+            timeout: 5000,
+            validateStatus: (s) => s < 500
+          });
+          if (ratesRes.data?.success && Array.isArray(ratesRes.data.data)) {
+            const gvMatch = ratesRes.data.data.find((item: any) => 
+              item.app?.toLowerCase().includes('voice') || item.business_code === 'go' || item.app?.toLowerCase().includes('google')
+            );
+            if (gvMatch && gvMatch.rate) {
+              smspinPrice = parseFloat(gvMatch.rate);
+            }
+          }
+        } catch (e) {
+          console.error('SMSPin Rates Error:', e);
+        }
+      }
+      
+      allOptions.push({
+        api: 'smspin',
+        code: 'googlevoice',
+        operator: null,
+        provider: null,
+        price: smspinPrice,
+        count: 100
+      });
+    }
+
     // Sort by price (cheapest first)
     allOptions.sort((a, b) => a.price - b.price);
 

@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -24,6 +24,101 @@ export async function GET(request: Request) {
   if (parts.length > 1) {
     source = parts[0];
     realId = parts[1];
+  }
+
+  // Handle SMSPin Provider
+  if (source === 'smspin') {
+    const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY;
+    if (!SMSPIN_API_KEY) {
+      return NextResponse.json({ error: 'SMSPin API KEY not configured in environment' }, { status: 500 });
+    }
+
+    try {
+      // 1. Check if already COMPLETED in Supabase
+      const { data: existing } = await supabaseAdmin
+        .from('activations')
+        .select('status, code, phone_number, user_id, service, country')
+        .eq('vsim_activation_id', id.toString())
+        .single();
+
+      if (existing && existing.status === 'COMPLETED' && existing.code) {
+        return NextResponse.json({ status: 'COMPLETED', code: existing.code });
+      }
+
+      if (existing && existing.status === 'CANCELLED') {
+        return NextResponse.json({ status: 'CANCELLED' });
+      }
+
+      const phoneNumber = existing?.phone_number || realId;
+
+      // 2. Call SMSPin user/get_sms.php
+      const checkUrl = `https://api.smspinverify.com/user/get_sms.php?customer=${encodeURIComponent(SMSPIN_API_KEY)}&app=googlevoice&country=USA&number=${encodeURIComponent(phoneNumber)}`;
+      const response = await fetch(checkUrl);
+      const rawText = await response.text();
+
+      let isSuccess = false;
+      let message = '';
+
+      try {
+        const json = JSON.parse(rawText);
+        if (json.success === true) {
+          isSuccess = true;
+          message = json.data?.sms || json.data?.code || json.message || '';
+        } else if (json.error) {
+          return NextResponse.json({ status: 'WAITING' });
+        }
+      } catch (_) {
+        const clean = rawText.trim();
+        if (clean === '' || clean.toLowerCase().includes('waiting') || clean.toLowerCase().includes('not received') || clean.toLowerCase().includes('wait_code') || clean.toLowerCase().includes('no sms')) {
+          return NextResponse.json({ status: 'WAITING' });
+        }
+        if (clean.toLowerCase().includes('access denied') || clean.toLowerCase().includes('error')) {
+          return NextResponse.json({ status: 'WAITING' });
+        }
+        isSuccess = true;
+        message = clean;
+      }
+
+      if (isSuccess && message) {
+        const codeMatch = message.match(/\b\d{4,8}\b/);
+        const code = codeMatch ? codeMatch[0] : message;
+
+        const { data: updatedAct } = await supabaseAdmin
+          .from('activations')
+          .update({ status: 'COMPLETED', code: code })
+          .eq('vsim_activation_id', id.toString())
+          .eq('status', 'PENDING')
+          .select('user_id, service, country');
+
+        if (updatedAct && updatedAct.length > 0) {
+          const actUserId = updatedAct[0].user_id;
+          await supabaseAdmin.rpc('reset_hoarder_strikes', { p_user_id: actUserId });
+
+          const { data: profile } = await supabaseAdmin.from('profiles').select('telegram_id').eq('id', actUserId).single();
+          if (profile && profile.telegram_id && process.env.TELEGRAM_BOT_TOKEN) {
+            try {
+              await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: profile.telegram_id,
+                  parse_mode: 'HTML',
+                  text: `💬 <b>New SMS Received!</b>\n\nService: <b>Google Voice</b>\nCode: <code>${code}</code>\n\n<i>This number is now completed.</i>`
+                })
+              });
+            } catch (e) {
+              console.error("TG Ping Error:", e);
+            }
+          }
+        }
+
+        return NextResponse.json({ status: 'COMPLETED', code });
+      }
+
+      return NextResponse.json({ status: 'WAITING' });
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
   }
 
   let TARGET_API_URL = VSIM_API_URL;

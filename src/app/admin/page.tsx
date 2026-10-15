@@ -274,6 +274,7 @@ export default function AdminPage() {
                    <option value="all">All APIs</option>
                    <option value="vsim">VSIM Only</option>
                    <option value="smsbower">SMSBower Only</option>
+                    <option value="smspin">SMSPin Only</option>
                  </select>
 
                  <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
@@ -322,7 +323,7 @@ export default function AdminPage() {
                     return (
                     <tr key={i} className={`hover:bg-slate-750 transition-colors ${isActive ? 'bg-slate-700/50' : 'bg-slate-800'}`}>
                       <td className="px-6 py-4 font-bold uppercase tracking-wider">
-                         <span className={`px-2 py-1 rounded text-xs ${opt.api === 'vsim' ? 'bg-purple-900/50 text-purple-300 border border-purple-700' : 'bg-orange-900/50 text-orange-300 border border-orange-700'}`}>
+                         <span className={`px-2 py-1 rounded text-xs ${opt.api === 'vsim' ? 'bg-purple-900/50 text-purple-300 border border-purple-700' : opt.api === 'smspin' ? 'bg-cyan-900/50 text-cyan-300 border border-cyan-700' : 'bg-orange-900/50 text-orange-300 border border-orange-700'}`}>
                            {opt.api}
                          </span>
                       </td>
