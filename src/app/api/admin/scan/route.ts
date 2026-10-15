@@ -114,6 +114,9 @@ export async function GET(request: Request) {
     const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY || '';
     if (country === '12' && service === 'gv') {
       let smspinPrice = 0.25;
+      let isLive = false;
+      let errorReason = '';
+
       if (SMSPIN_API_KEY) {
         try {
           const ratesRes = await axios.get('https://api.smspinverify.com/json/get_rates.php', {
@@ -129,18 +132,26 @@ export async function GET(request: Request) {
             );
             if (gvMatch && gvMatch.rate) {
               smspinPrice = parseFloat(gvMatch.rate);
+              isLive = true;
+            } else {
+              errorReason = 'GV not found in rates list';
             }
+          } else {
+            errorReason = ratesRes.data?.error || 'Invalid API response';
           }
-        } catch (e) {
+        } catch (e: any) {
+          errorReason = e.message || 'Connection failed';
           console.error('SMSPin Rates Error:', e);
         }
+      } else {
+        errorReason = 'Missing SMSPIN_API_KEY env';
       }
       
       allOptions.push({
         api: 'smspin',
         code: 'googlevoice',
-        operator: null,
-        provider: null,
+        operator: isLive ? 'LIVE' : 'OFFLINE',
+        provider: isLive ? 'LIVE API ($' + smspinPrice.toFixed(2) + ')' : `Fallback (${errorReason})`,
         price: smspinPrice,
         count: 100
       });

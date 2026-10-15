@@ -332,7 +332,13 @@ export default function AdminPage() {
                         ${opt.price}
                       </td>
                       <td className="px-6 py-4">
-                         {opt.operator ? <span className="font-mono text-slate-300">{opt.operator}</span> : <span className="text-slate-500 italic">None</span>}
+                         {opt.operator === 'LIVE' ? (
+                           <span className="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">LIVE API</span>
+                         ) : opt.operator ? (
+                           <span className="font-mono text-slate-300">{opt.operator}</span>
+                         ) : (
+                           <span className="text-slate-500 italic">None</span>
+                         )}
                       </td>
                       <td className="px-6 py-4 text-slate-400">
                          {opt.provider ? <span className="font-mono text-slate-300">{opt.provider}</span> : <span className="text-slate-500 italic">None</span>}
