@@ -121,7 +121,7 @@ export async function GET(request: Request) {
         try {
           const ratesRes = await axios.get('https://api.smspinverify.com/json/get_rates.php', {
             params: { customer: SMSPIN_API_KEY, country: 'USA' },
-            timeout: 5000,
+            timeout: 15000,
             validateStatus: (s) => s < 500
           });
           if (ratesRes.data?.success && Array.isArray(ratesRes.data.data)) {
