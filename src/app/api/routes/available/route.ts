@@ -9,7 +9,16 @@ export async function GET() {
       
     if (error) throw error;
     
-    return NextResponse.json({ routes: data });
+    const routes = [...(data || [])];
+    (data || []).forEach((r: any) => {
+      if (r.country_id === '12') {
+        routes.push({ ...r, country_id: '187' });
+      } else if (r.country_id === '187') {
+        routes.push({ ...r, country_id: '12' });
+      }
+    });
+
+    return NextResponse.json({ routes });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

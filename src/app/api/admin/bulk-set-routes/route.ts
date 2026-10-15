@@ -22,7 +22,8 @@ export async function POST(request: Request) {
           target_service_code: r.target_service_code,
           target_operator: r.target_operator || null,
           target_provider: r.target_provider || null,
-          tier: r.tier
+          tier: r.tier,
+          cached_wholesale_cost: Number(r.cached_wholesale_cost) > 0 ? Number(r.cached_wholesale_cost) : (r.target_api === 'smspin' ? 0.25 : 0.20)
         }))
       );
       if (insError) throw insError;

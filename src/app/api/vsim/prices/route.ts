@@ -15,10 +15,11 @@ export async function GET(request: Request) {
   }
 
   try {
+    const queryCountries = (country === '187' || country === '12') ? ['187', '12'] : [country];
     const { data: rules, error: ruleError } = await supabaseAdmin
       .from('routing_rules')
       .select('*')
-      .eq('country_id', country)
+      .in('country_id', queryCountries)
       .eq('internal_service', service);
 
     if (ruleError || !rules || rules.length === 0) {
@@ -28,8 +29,8 @@ export async function GET(request: Request) {
       });
     }
 
-    // Filter to rules that have stock (cached_wholesale_cost > 0)
-    const activeRules = rules.filter(r => r.cached_wholesale_cost > 0);
+    // Filter to rules that have stock (cached_wholesale_cost > 0 or smspin)
+    const activeRules = rules.filter(r => (Number(r.cached_wholesale_cost) > 0) || r.target_api === 'smspin');
     
     if (activeRules.length === 0) {
        return NextResponse.json({ 

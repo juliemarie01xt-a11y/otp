@@ -106,7 +106,8 @@ export default function AdminPage() {
       target_service_code: opt.code,
       target_operator: opt.operator || null,
       target_provider: opt.provider || null,
-      tier
+      tier,
+      cached_wholesale_cost: opt.price
     };
     setStagedRules(prev => [...prev, newRule]);
   };
