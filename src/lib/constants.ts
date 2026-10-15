@@ -1,7 +1,7 @@
 export const POPULAR_COUNTRIES = [
+  { id: '187', name: 'USA', short: 'USA', flagUrl: 'https://flagcdn.com/w40/us.png', flag: '🇺🇸' },
   { id: '12', name: 'USA (Virtual)', short: 'USA', flagUrl: 'https://flagcdn.com/w40/us.png', flag: '🇺🇸' },
   { id: '36', name: 'Canada', short: 'CAN', flagUrl: 'https://flagcdn.com/w40/ca.png', flag: '🇨🇦' },
-  { id: '187', name: 'USA (Physical)', short: 'USA', flagUrl: 'https://flagcdn.com/w40/us.png', flag: '🇺🇸' },
   { id: '16', name: 'United Kingdom', short: 'GBR', flagUrl: 'https://flagcdn.com/w40/gb.png', flag: '🇬🇧' },
   { id: '33', name: 'Colombia', short: 'COL', flagUrl: 'https://flagcdn.com/w40/co.png', flag: '🇨🇴' },
   { id: '43', name: 'Germany', short: 'DEU', flagUrl: 'https://flagcdn.com/w40/de.png', flag: '🇩🇪' },
