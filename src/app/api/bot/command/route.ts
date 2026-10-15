@@ -936,7 +936,7 @@ Click the button below to pay securely via Plisio.`,
 
             let phone = '';
             let actId = '';
-            let wholesaleCost = Number(rule.cached_wholesale_cost) || 0.45;
+            let wholesaleCost = Number(rule.cached_wholesale_cost) || 0.25;
 
             if (typeof sData === 'object' && sData !== null) {
               if (sData.success === false) {

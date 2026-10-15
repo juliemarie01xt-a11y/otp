@@ -113,7 +113,7 @@ export async function GET(request: Request) {
     // --- SMSPIN SCAN (Google Voice USA) ---
     const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY || '';
     if (country === '12' && service === 'gv') {
-      let smspinPrice = 0.45;
+      let smspinPrice = 0.25;
       if (SMSPIN_API_KEY) {
         try {
           const ratesRes = await axios.get('https://api.smspinverify.com/json/get_rates.php', {
@@ -123,7 +123,9 @@ export async function GET(request: Request) {
           });
           if (ratesRes.data?.success && Array.isArray(ratesRes.data.data)) {
             const gvMatch = ratesRes.data.data.find((item: any) => 
-              item.app?.toLowerCase().includes('voice') || item.business_code === 'go' || item.app?.toLowerCase().includes('google')
+              item.business_code?.toLowerCase() === 'googlevoice' ||
+              item.app?.toLowerCase() === 'google voice' ||
+              item.app?.toLowerCase().includes('voice')
             );
             if (gvMatch && gvMatch.rate) {
               smspinPrice = parseFloat(gvMatch.rate);
