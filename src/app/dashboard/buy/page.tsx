@@ -621,7 +621,7 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-xs font-mono font-medium text-zinc-400">$${minPrice}</span>
+                              <span className="text-xs font-mono font-medium text-zinc-400">${minPrice}</span>
                               <LucideArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-blue-500 transition-colors" />
                             </div>
                           </button>
@@ -707,7 +707,7 @@ export default function Home() {
                           </p>
                         </div>
                         <div className="flex items-center sm:flex-col gap-4 sm:gap-1.5">
-                          <span className="text-lg font-mono font-bold text-white whitespace-nowrap">$${Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
+                          <span className="text-lg font-mono font-bold text-white whitespace-nowrap">${Number(opt.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
                           <button
                             onClick={() => buyNumber(opt.rule_id, opt.tier, opt.price)}
                             disabled={purchasingRule === opt.rule_id}
