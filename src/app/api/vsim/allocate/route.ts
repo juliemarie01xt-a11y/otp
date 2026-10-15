@@ -144,6 +144,9 @@ export async function POST(request: Request) {
           }
 
           let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
+          if (rule.target_api === 'smspin' && (service === 'gv' || rule.target_service_code === 'googlevoice')) {
+            retailCost = 0.27;
+          }
 
           if (maxPrice && retailCost > (Number(maxPrice) + 0.0001)) {
             lastError = `Price changed! The route now costs $${retailCost}. Order cancelled to protect your wallet. Please refresh prices.`;

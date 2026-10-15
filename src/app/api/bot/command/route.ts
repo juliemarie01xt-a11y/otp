@@ -581,7 +581,10 @@ Click the button below to pay securely via Plisio.`,
           if (ctyCode === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
              if (wholesaleCost < 0.188) wholesaleCost = 0.188;
           }
-          const retailCost = wholesaleCost + PROFIT_MARGIN;
+          let retailCost = wholesaleCost + PROFIT_MARGIN;
+          if (rule.target_api === 'smspin' && (svcCode === 'gv' || rule.target_service_code === 'googlevoice')) {
+             retailCost = 0.27;
+          }
           const tierLabel = rule.tier === 'premium' ? '💎 High-Priority' : '⭐ Standard';
           const buttonText = `${tierLabel} (Server ${getLetter(index)}) - $${formatMoney(retailCost)}`;
           return [{ text: buttonText, callback_data: `buy_rt_${rule.id}` }];
@@ -965,6 +968,9 @@ Click the button below to pay securely via Plisio.`,
             }
 
             let retailCost = Number((wholesaleCost + PROFIT_MARGIN).toPrecision(12));
+            if (rule.target_api === 'smspin' && (rule.internal_service === 'gv' || rule.target_service_code === 'googlevoice')) {
+              retailCost = 0.27;
+            }
             if (retailCost > userBalance) {
               await tgApi('sendMessage', { chat_id: chatId, text: `❌ Insufficient balance. You need ${formatMoney(retailCost)}` });
               return NextResponse.json({ success: true });

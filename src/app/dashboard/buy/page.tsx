@@ -596,7 +596,10 @@ export default function Home() {
                       .filter(s => s.code !== 'gmail' && s.name.toLowerCase().includes(serviceSearch.toLowerCase()) && availableRoutes.some(r => r.internal_service === s.code && r.country_id === country))
                       .map(s => {
                         const sRoutes = availableRoutes.filter(r => r.internal_service === s.code && r.country_id === country);
-                        const minPrice = sRoutes.length > 0 ? Math.min(...sRoutes.map(r => r.cached_wholesale_cost + 0.012)).toFixed(2) : '--';
+                        const minPrice = sRoutes.length > 0 ? Math.min(...sRoutes.map(r => {
+                          if (r.target_api === 'smspin' && r.internal_service === 'gv') return 0.27;
+                          return r.cached_wholesale_cost + 0.012;
+                        })).toFixed(2) : '--';
                         const count = sRoutes.length > 0 ? sRoutes.length * 125 : 0; // Fake count for aesthetic purposes matching 5sim badge
                         return (
                           <button

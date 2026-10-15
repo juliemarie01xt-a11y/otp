@@ -51,11 +51,15 @@ export async function GET(request: Request) {
         if (country === '12' && rule.target_api === 'vsim' && rule.target_service_code === 'lvbv') {
            if (bestPrice < 0.188) bestPrice = 0.188;
         }
+        let finalPrice = Number((bestPrice + PROFIT_MARGIN).toPrecision(12));
+        if (rule.target_api === 'smspin' && (service === 'gv' || rule.target_service_code === 'googlevoice')) {
+           finalPrice = 0.27;
+        }
         return {
             rule_id: rule.id,
             tier: rule.tier,
             server_label: `Server ${getLetter(index)}`,
-            price: Number((bestPrice + PROFIT_MARGIN).toPrecision(12)),
+            price: finalPrice,
             count: 100,
             source: rule.target_api
         };

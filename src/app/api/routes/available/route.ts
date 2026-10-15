@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('routing_rules')
-      .select('country_id, internal_service, cached_wholesale_cost');
+      .select('country_id, internal_service, cached_wholesale_cost, target_api');
       
     if (error) throw error;
     

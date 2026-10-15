@@ -40,6 +40,7 @@ export default function DashboardOverviewPage() {
               for (const r of routes) {
                 let cost = r.cached_wholesale_cost;
                 if (r.country_id === '12' && s === 'gv' && cost < 0.188) cost = 0.188;
+                if (r.target_api === 'smspin' && s === 'gv') cost = 0.258; // 0.258 + 0.012 = 0.27
                 if (cost < minWholesale) minWholesale = cost;
               }
               const finalPrice = (minWholesale + 0.012).toFixed(2);
