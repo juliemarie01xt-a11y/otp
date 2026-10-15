@@ -15,11 +15,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const queryCountries = (country === '187' || country === '12') ? ['187', '12'] : [country];
     const { data: rules, error: ruleError } = await supabaseAdmin
       .from('routing_rules')
       .select('*')
-      .in('country_id', queryCountries)
+      .eq('country_id', country)
       .eq('internal_service', service);
 
     if (ruleError || !rules || rules.length === 0) {

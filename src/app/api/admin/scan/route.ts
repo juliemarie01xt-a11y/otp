@@ -112,7 +112,7 @@ export async function GET(request: Request) {
 
     // --- SMSPIN SCAN (Google Voice USA) ---
     const SMSPIN_API_KEY = process.env.SMSPIN_API_KEY || '';
-    if ((country === '187' || country === '12') && service === 'gv') {
+    if (country === '187' && service === 'gv') {
       let smspinPrice = 0.25;
       let isLive = false;
       let errorReason = '';
